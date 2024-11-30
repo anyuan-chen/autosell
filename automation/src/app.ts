@@ -33,7 +33,7 @@ const run = async () => {
   );
 };
 
-run();
+console.log(run());
 
 // const client = new ConvexHttpClient(process.env.CONVEX_URL || "");
 // responder();

@@ -18,7 +18,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Plus } from "lucide-react";
+import { CheckCircle2, Plus, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,13 +27,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import MapComponent from "@/components/map-search";
 
 type Location = {
   id: string;
   name: string;
   coordinates: [number, number];
+  fullText: string;
+  safetyInfo?: {
+    isPublicPlace: boolean;
+    hasPeopleAround: boolean;
+    hasSecurityCameras: boolean;
+    reasoning: string;
+  };
 };
 
 function SortableLocation({ location }: { location: Location }) {
@@ -53,8 +59,24 @@ function SortableLocation({ location }: { location: Location }) {
       {...listeners}
       className="bg-white p-4 rounded shadow"
     >
-      {location.name} ({location.coordinates[0].toFixed(4)},{" "}
-      {location.coordinates[1].toFixed(4)})
+      <div>
+        {location.name} ({location.coordinates[0].toFixed(4)},{" "}
+        {location.coordinates[1].toFixed(4)})
+      </div>
+      {location.safetyInfo && (
+        <div className="text-sm text-gray-500 mt-2">
+          <div>
+            Public Place: {location.safetyInfo.isPublicPlace ? "Yes" : "No"}
+          </div>
+          <div>
+            People Around: {location.safetyInfo.hasPeopleAround ? "Yes" : "No"}
+          </div>
+          <div>
+            Security Cameras:{" "}
+            {location.safetyInfo.hasSecurityCameras ? "Yes" : "No"}
+          </div>
+        </div>
+      )}
     </li>
   );
 }
@@ -103,58 +125,106 @@ export default function LocationList() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
+    <div className="container mx-auto px-8 pt-4">
+      <div className="flex items-center w-full justify-between mb-4">
         <h1 className="text-2xl font-bold">Locations</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => setNewLocation(null)}>
               <Plus className="mr-2 h-4 w-4" /> Create New
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[825px]">
             <DialogHeader>
               <DialogTitle>Add New Location</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Input
-                  id="name"
-                  placeholder="Location name"
-                  className="col-span-4"
-                  value={newLocation?.name || ""}
-                  onChange={(e) =>
+            <div className="grid grid-cols-3 gap-4 py-4">
+              <div className="col-span-2">
+                <MapComponent
+                  onLocationSelect={(lng, lat, name, fullText) => {
                     setNewLocation(
-                      (prev) => ({ ...prev, name: e.target.value } as Location)
+                      (prev) =>
+                        ({
+                          ...prev,
+                          id: Date.now().toString(),
+                          coordinates: [lng, lat],
+                          name,
+                          fullText,
+                        } as Location)
+                    );
+                    fetch(
+                      `/api/ai/location-safety?location=${encodeURIComponent(
+                        fullText
+                      )}`
                     )
-                  }
+                      .then((res) => res.json())
+                      .then((safetyInfo) => {
+                        console.log(safetyInfo);
+                        setNewLocation((prev) => {
+                          if (!prev) return null;
+                          return {
+                            ...prev,
+                            safetyInfo,
+                          };
+                        });
+                      })
+                      .catch((error) => {
+                        console.error(
+                          "Failed to get location safety info:",
+                          error
+                        );
+                      });
+                  }}
                 />
               </div>
-              <MapComponent
-                onLocationSelect={(lng, lat) => {
-                  setNewLocation(
-                    (prev) =>
-                      ({
-                        ...prev,
-                        id: Date.now().toString(),
-                        coordinates: [lng, lat],
-                      } as Location)
-                  );
-                }}
-              />
+              <div className="border rounded-md p-4">
+                {newLocation?.safetyInfo && (
+                  <div className="text-sm text-gray-500 space-y-2">
+                    <div className="flex items-center">
+                      {newLocation.safetyInfo.isPublicPlace ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="ml-2">Public Place</span>
+                    </div>
+                    <div className="flex items-center">
+                      {newLocation.safetyInfo.hasPeopleAround ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="ml-2">People Around</span>
+                    </div>
+                    <div className="flex items-center">
+                      {newLocation.safetyInfo.hasSecurityCameras ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="ml-2">Security Cameras</span>
+                    </div>
+                    <div className="pt-8">
+                      {newLocation.safetyInfo.reasoning}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <Button
-              onClick={addLocation}
-              disabled={!newLocation?.name || !newLocation?.coordinates}
-            >
-              Add Location
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                onClick={addLocation}
+                disabled={!newLocation?.name || !newLocation?.coordinates}
+              >
+                Save
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
 
       {locations.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">
+        <div className="text-center py-32 text-gray-500">
           No locations added yet.
         </div>
       ) : (

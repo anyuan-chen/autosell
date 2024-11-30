@@ -1,38 +1,41 @@
-import { useState } from "react";
-import Map, { Marker } from "react-map-gl";
+"use client";
+
+import Map from "react-map-gl";
+import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
 import GeocoderControl from "./geocoder-control";
 
+if (typeof window !== "undefined" && !window.mapboxgl) {
+  window.mapboxgl = mapboxgl as unknown as typeof window.mapboxgl;
+}
+
 type MapComponentProps = {
-  onLocationSelect: (lng: number, lat: number) => void;
+  onLocationSelect: (
+    lng: number,
+    lat: number,
+    name: string,
+    fullText: string
+  ) => void;
 };
 
 export default function MapComponent({ onLocationSelect }: MapComponentProps) {
-  const [marker, setMarker] = useState<[number, number] | null>(null);
-
   return (
     <Map
       initialViewState={{
-        longitude: marker?.[0] ?? -122.4,
-        latitude: marker?.[1] ?? 37.8,
+        longitude: -122.4,
+        latitude: 37.8,
         zoom: 14,
       }}
       style={{ width: "100%", height: 300 }}
       mapStyle="mapbox://styles/mapbox/streets-v9"
-      mapboxAccessToken={process.env.MAPBOX_ACCESS_TOKEN}
-      onClick={(event: { lngLat: { lng: number; lat: number } }) => {
-        const { lng, lat } = event.lngLat;
-        setMarker([lng, lat]);
-        onLocationSelect(lng, lat);
-      }}
+      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
     >
       <GeocoderControl
-        mapboxAccessToken={process.env.MAPBOX_ACCESS_TOKEN || ""}
+        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN || ""}
         position="top-left"
+        onLocationSelect={onLocationSelect}
       />
-      {marker && (
-        <Marker longitude={marker[0]} latitude={marker[1]} color="red" />
-      )}
     </Map>
   );
 }

@@ -11,6 +11,17 @@ type GeocoderControlProps = Omit<
   marker?: boolean | Omit<MarkerProps, "longitude" | "latitude">;
 
   position: ControlPosition;
+  onLocationSelect: (
+    lng: number,
+    lat: number,
+    name: string,
+    fullText: string,
+    safetyInfo?: {
+      isPublicPlace: boolean;
+      hasPeopleAround: boolean;
+      hasSecurityCameras: boolean;
+    }
+  ) => void;
 
   onLoading?: (e: object) => void;
   onResults?: (e: object) => void;
@@ -22,6 +33,7 @@ type GeocoderControlProps = Omit<
 export default function GeocoderControl(props: GeocoderControlProps) {
   const [marker, setMarker] = useState<React.ReactNode>(null);
 
+  // @ts-expect-error stupid
   const geocoder = useControl<MapboxGeocoder>(
     () => {
       const ctrl = new MapboxGeocoder({
@@ -29,38 +41,57 @@ export default function GeocoderControl(props: GeocoderControlProps) {
         marker: false,
         accessToken: props.mapboxAccessToken,
       });
-      if (props.onLoading) {
-        ctrl.on("loading", props.onLoading);
-      }
-      if (props.onResults) {
-        ctrl.on("results", props.onResults);
-      }
-      ctrl.on("result", (evt) => {
-        if (props.onResult) {
-          props.onResult(evt);
-        }
 
+      ctrl.on("result", async (evt) => {
+        console.log("Search result:", evt);
         const { result } = evt;
         const location =
           result &&
           (result.center ||
             (result.geometry?.type === "Point" && result.geometry.coordinates));
-        if (location && props.marker) {
-          const markerProps = typeof props.marker === "boolean" ? {} : props.marker;
+
+        if (location) {
+          console.log("Setting marker at:", location);
           setMarker(
-            <Marker
-              {...markerProps}
-              longitude={location[0]}
-              latitude={location[1]}
-            />
+            <Marker longitude={location[0]} latitude={location[1]}>
+              <div
+                style={{
+                  backgroundColor: "red",
+                  width: "12px",
+                  height: "12px",
+                  borderRadius: "50%",
+                }}
+              />
+            </Marker>
           );
-        } else {
-          setMarker(null);
+
+          try {
+            const safetyResponse = await fetch(
+              `/api/ai/location-safety?info=${encodeURIComponent(
+                result.place_name
+              )}`
+            );
+            const safetyInfo = await safetyResponse.json();
+
+            props.onLocationSelect(
+              location[0],
+              location[1],
+              result.place_name,
+              JSON.stringify(evt),
+              safetyInfo
+            );
+          } catch (error) {
+            console.error("Error fetching safety info:", error);
+            props.onLocationSelect(
+              location[0],
+              location[1],
+              result.place_name,
+              JSON.stringify(evt)
+            );
+          }
         }
       });
-      if (props.onError) {
-        ctrl.on("error", props.onError);
-      }
+
       return ctrl;
     },
     {
@@ -68,7 +99,7 @@ export default function GeocoderControl(props: GeocoderControlProps) {
     }
   );
 
-  // @ts-expect-error private member access
+  // @ts-expect-error stupid
   if (geocoder._map) {
     if (
       geocoder.getProximity() !== props.proximity &&

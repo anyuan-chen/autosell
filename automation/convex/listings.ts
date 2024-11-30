@@ -13,21 +13,43 @@ export const getAll = query({
           .filter((q) => q.eq(q.field("listingId"), listing._id))
           .collect();
         return { ...listing, leads };
-      })
+      }),
     );
 
     return listingsWithLeads;
   },
 });
 
-export const create = mutation({
+export const upsert = mutation({
   args: {
     title: v.string(),
     price: v.number(),
     kijijiLink: v.string(),
     craigslistLink: v.string(),
+    src: v.string()
   },
   handler: async (ctx, args) => {
+    const existingListing = await ctx.db
+      .query("listings")
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("kijijiLink"), args.kijijiLink),
+          q.eq(q.field("craigslistLink"), args.craigslistLink),
+          q.eq(q.field("src"), args.src)
+        ),
+      )
+      .first();
+
+    if (existingListing) {
+      await ctx.db.patch(existingListing._id, {
+        title: args.title,
+        price: args.price,
+        kijijiLink: args.kijijiLink,
+        craigslistLink: args.craigslistLink,
+      });
+      return existingListing._id;
+    }
+
     const listingId = await ctx.db.insert("listings", {
       title: args.title,
       price: args.price,

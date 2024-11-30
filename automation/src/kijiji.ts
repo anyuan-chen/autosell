@@ -1,15 +1,17 @@
 import "dotenv/config";
 import * as path from "path";
 import { z } from "zod";
+import fs from 'fs'
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Locator } from "playwright-core";
 import { kijijiStagehand, responderStagehand } from "app";
+import { KijijiCategory, KijijiClothingCategory, KijijiMusicalInstrumentCategory } from "types";
 
-type KijijiSubcategory =
+export type KijijiSubcategory =
   | KijijiClothingCategory
   | KijijiMusicalInstrumentCategory;
 
-const runKijijiLogin = async (stagehand: Stagehand) => {
+export const runKijijiLogin = async (stagehand: Stagehand) => {
   await stagehand.init({ domSettleTimeoutMs: 40000 });
   await stagehand.page.goto(
     "https://id.kijiji.ca/login?service=https%3A%2F%2Fid.kijiji.ca%2Foauth2.0%2FcallbackAuthorize%3Fclient_id%3Dkijiji_horizontal_web_gpmPihV3%26redirect_uri%3Dhttps%253A%252F%252Fwww.kijiji.ca%252Fapi%252Fauth%252Fcallback%252Fcis%26response_type%3Dcode%26client_name%3DCasOAuthClient&locale=en&state=SteMlbjWnFA0Q1E2yVPRw9Pv0KSwaCNECrjy6DGrq20&scope=openid+email+profile"
@@ -21,7 +23,8 @@ const runKijijiLogin = async (stagehand: Stagehand) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 };
 
-const postKijijiAd = async (
+export const postKijijiAd = async (
+  src: string,
   title: string,
   description: string,
   price: number,
@@ -62,8 +65,19 @@ const postKijijiAd = async (
     await kijijiStagehand.act({ action: `click on the ${subcategory} button` });
   }
   await kijijiStagehand.page.fill("#pstad-descrptn", description);
-  const fileInput = kijijiStagehand.page.locator('input[type="file"]');
-  await fileInput.setInputFiles(path.join(__dirname, "sample.jpg"));
+  const fileChooserPromise = kijijiStagehand.page.waitForEvent('filechooser');
+  const response = await fetch(src);
+  const buffer = await response.arrayBuffer();
+  const tempFile = path.join(process.cwd(), `temp-${Date.now()}.jpg`);
+  await fs.promises.writeFile(tempFile, Buffer.from(buffer));
+  await kijijiStagehand.page.getByText('Select Images').click();
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const fileChooser = await fileChooserPromise;
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await fileChooser.setFiles(tempFile);
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  // await fs.promises.unlink(tempFile); 
+  await new Promise((resolve) => setTimeout(resolve, 1000));
   await kijijiStagehand.page.fill("#PriceAmount", price.toString());
   const submitButtons = await kijijiStagehand.page
     .locator('button[type="submit"]')

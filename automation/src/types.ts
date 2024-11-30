@@ -1,4 +1,4 @@
-enum KijijiCategory {
+export enum KijijiCategory {
   ArtsAndCollectibles = "Arts & Collectibles",
   Audio = "Audio",
   BabyItems = "Baby Items",
@@ -30,7 +30,7 @@ enum KijijiCategory {
   VideoGamesAndConsoles = "Video Games & Consoles",
 }
 
-enum KijijiMusicalInstrumentCategory {
+export enum KijijiMusicalInstrumentCategory {
   AmpsAndPedals = "Amps & Pedals",
   Brass = "Brass",
   DrumsAndPercussion = "Drums & Percussion",
@@ -43,7 +43,7 @@ enum KijijiMusicalInstrumentCategory {
   Other = "Other",
 }
 
-enum KijijiClothingCategory {
+export enum KijijiClothingCategory {
   Costumes = "Costumes",
   KidsAndYouth = "Kids & Youth",
   Mens = "Men's",

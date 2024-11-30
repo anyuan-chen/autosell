@@ -90,6 +90,7 @@ app.post("/post-shopify", async (req: Request, res: Response) => {
   const listing = await client.query(api.listings.get, {
     src: src,
   });
+
   if (!listing) {
     return res.status(404).json({ error: "Listing not found" });
   }

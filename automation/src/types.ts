@@ -1,3 +1,5 @@
+import { KijijiSubcategory } from "kijiji";
+
 export enum ecommercePlatform {
   Shopify = "Shopify",
   Kijiji = "Kijiji",
@@ -65,6 +67,43 @@ export enum KijijiClothingCategory {
   Other = "Other",
   WomensOther = "Women's - Other",
 }
+
+export const KijijiToCategoryMap: Record<
+  string,
+  | typeof KijijiClothingCategory
+  | typeof KijijiMusicalInstrumentCategory
+  | undefined
+> = {
+  [KijijiCategory.Clothing]: KijijiClothingCategory,
+  [KijijiCategory.MusicalInstruments]: KijijiMusicalInstrumentCategory,
+  [KijijiCategory.ArtsAndCollectibles]: undefined,
+  [KijijiCategory.Audio]: undefined,
+  [KijijiCategory.BabyItems]: undefined,
+  [KijijiCategory.Bikes]: undefined,
+  [KijijiCategory.Books]: undefined,
+  [KijijiCategory.BusinessAndIndustrial]: undefined,
+  [KijijiCategory.CamerasAndCamcorders]: undefined,
+  [KijijiCategory.CDsDVDsAndBluray]: undefined,
+  [KijijiCategory.Computers]: undefined,
+  [KijijiCategory.ComputerAccessories]: undefined,
+  [KijijiCategory.Electronics]: undefined,
+  [KijijiCategory.FreeStuff]: undefined,
+  [KijijiCategory.Furniture]: undefined,
+  [KijijiCategory.GarageSales]: undefined,
+  [KijijiCategory.HealthAndSpecialNeeds]: undefined,
+  [KijijiCategory.HobbiesAndCrafts]: undefined,
+  [KijijiCategory.HomeAppliances]: undefined,
+  [KijijiCategory.HomeIndoor]: undefined,
+  [KijijiCategory.HomeOutdoorAndGarden]: undefined,
+  [KijijiCategory.HomeRenovationMaterials]: undefined,
+  [KijijiCategory.JewelleryAndWatches]: undefined,
+  [KijijiCategory.Phones]: undefined,
+  [KijijiCategory.SportingGoodsAndExercise]: undefined,
+  [KijijiCategory.Tools]: undefined,
+  [KijijiCategory.ToysAndGames]: undefined,
+  [KijijiCategory.TVsAndVideo]: undefined,
+  [KijijiCategory.VideoGamesAndConsoles]: undefined,
+};
 
 export enum ShopifyCategory {
   ApparelAndAccessories = "Electronics",

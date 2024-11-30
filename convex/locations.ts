@@ -16,7 +16,6 @@ export const replaceAll = mutation({
       v.object({
         name: v.string(),
         coordinates: v.array(v.number()),
-        fullText: v.string(),
         safetyInfo: v.optional(
           v.object({
             isPublicPlace: v.boolean(),
@@ -26,6 +25,7 @@ export const replaceAll = mutation({
           })
         ),
         rank: v.number(),
+        address: v.string()
       })
     ),
   },

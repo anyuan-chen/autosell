@@ -5,7 +5,7 @@ export default defineSchema({
   locations: defineTable({
     name: v.string(),
     coordinates: v.array(v.number()),
-    fullText: v.string(),
+    address: v.string(),
     safetyInfo: v.optional(
       v.object({
         isPublicPlace: v.boolean(),

@@ -31,20 +31,20 @@ import MapComponent from "@/components/map-search";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
-type Location = {
+interface Location {
   _id: string;
   name: string;
+  address: string;
   coordinates: [number, number];
-  fullText: string;
   safetyInfo?: {
     isPublicPlace: boolean;
     hasPeopleAround: boolean;
     hasSecurityCameras: boolean;
     reasoning: string;
   };
-};
+}
 
-function SortableLocation({ location }: { location: Location }) {
+export function SortableLocation({ location }: { location: Location }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: location._id });
 
@@ -59,26 +59,51 @@ function SortableLocation({ location }: { location: Location }) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-white p-4 rounded shadow"
+      className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border border-gray-100"
     >
-      <div>
-        {location.name} ({location.coordinates[0].toFixed(4)},{" "}
-        {location.coordinates[1].toFixed(4)})
-      </div>
-      {location.safetyInfo && (
-        <div className="text-sm text-gray-500 mt-2">
-          <div>
-            Public Place: {location.safetyInfo.isPublicPlace ? "Yes" : "No"}
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-start">
+          <div className="flex flex-col">
+            <h3 className="text-lg font-semibold text-black">
+              {location.name}
+            </h3>
+            <p className="text-sm text-gray-400">{location.address}</p>
           </div>
-          <div>
-            People Around: {location.safetyInfo.hasPeopleAround ? "Yes" : "No"}
-          </div>
-          <div>
-            Security Cameras:{" "}
-            {location.safetyInfo.hasSecurityCameras ? "Yes" : "No"}
+          <div className="text-xs text-gray-400">
+            ({location.coordinates[0].toFixed(4)},{" "}
+            {location.coordinates[1].toFixed(4)})
           </div>
         </div>
-      )}
+
+        {location.safetyInfo && (
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="flex items-center gap-1">
+              {location.safetyInfo.isPublicPlace ? (
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+              ) : (
+                <XCircle className="w-4 h-4 text-red-500" />
+              )}
+              <span className="text-sm">Public Place</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {location.safetyInfo.hasPeopleAround ? (
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+              ) : (
+                <XCircle className="w-4 h-4 text-red-500" />
+              )}
+              <span className="text-sm">People Around</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {location.safetyInfo.hasSecurityCameras ? (
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+              ) : (
+                <XCircle className="w-4 h-4 text-red-500" />
+              )}
+              <span className="text-sm">Security Cameras</span>
+            </div>
+          </div>
+        )}
+      </div>
     </li>
   );
 }
@@ -116,18 +141,30 @@ export default function LocationList() {
       const oldIndex = newLocations.findIndex((item) => item._id === active.id);
       const newIndex = newLocations.findIndex((item) => item._id === over?.id);
       const reorderedLocations = arrayMove(newLocations, oldIndex, newIndex);
-      const locationsWithRank = reorderedLocations.map((loc, idx) => ({
-        ...loc,
-        rank: idx,
-      }));
+      const locationsWithRank = reorderedLocations.map((loc, idx) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { _id, _creationTime, ...rest } = loc;
+        return {
+          ...rest,
+          rank: idx,
+        };
+      });
       replaceAll({ locations: locationsWithRank });
     }
   };
 
   const addLocation = async () => {
     if (newLocation && locations) {
+      const oldLocations = locations.map((location) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { _id, _creationTime, ...rest } = location;
+        return { ...rest, rank: location.rank };
+      });
       await replaceAll({
-        locations: [{ ...newLocation, rank: locations.length }],
+        locations: [
+          ...oldLocations,
+          { ...newLocation, rank: locations.length },
+        ],
       });
       setNewLocation(null);
       setIsDialogOpen(false);
@@ -151,14 +188,14 @@ export default function LocationList() {
             <div className="grid grid-cols-3 gap-4 py-4">
               <div className="col-span-2">
                 <MapComponent
-                  onLocationSelect={(lng, lat, name, fullText) => {
+                  onLocationSelect={(lng, lat, name, address, fullText) => {
                     setNewLocation(
                       (prev) =>
                         ({
                           ...prev,
                           coordinates: [lng, lat],
                           name,
-                          fullText,
+                          address,
                         }) as Location
                     );
                     fetch(
@@ -231,7 +268,16 @@ export default function LocationList() {
         </Dialog>
       </div>
 
-      {!locations || locations.length === 0 ? (
+      {locations === undefined ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-gray-100 animate-pulse h-20 rounded shadow"
+            />
+          ))}
+        </div>
+      ) : locations.length === 0 ? (
         <div className="text-center py-32 text-gray-500">
           No locations added yet.
         </div>

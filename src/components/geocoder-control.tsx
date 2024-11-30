@@ -15,6 +15,7 @@ type GeocoderControlProps = Omit<
     lng: number,
     lat: number,
     name: string,
+    address: string,
     fullText: string,
     safetyInfo?: {
       isPublicPlace: boolean;
@@ -76,7 +77,8 @@ export default function GeocoderControl(props: GeocoderControlProps) {
             props.onLocationSelect(
               location[0],
               location[1],
-              result.place_name,
+              result.text,
+              result.properties.address,
               JSON.stringify(evt),
               safetyInfo
             );
@@ -85,7 +87,8 @@ export default function GeocoderControl(props: GeocoderControlProps) {
             props.onLocationSelect(
               location[0],
               location[1],
-              result.place_name,
+              result.text,
+              result.properties.address,
               JSON.stringify(evt)
             );
           }

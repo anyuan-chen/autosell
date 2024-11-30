@@ -15,6 +15,7 @@ type MapComponentProps = {
     lng: number,
     lat: number,
     name: string,
+    address: string,
     fullText: string
   ) => void;
 };

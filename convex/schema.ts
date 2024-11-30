@@ -16,4 +16,20 @@ export default defineSchema({
     ),
     rank: v.number(),
   }),
+  listings: defineTable({
+    title: v.string(),
+    price: v.number(),
+    kijijiLink: v.string(),
+    craigslistLink: v.string(),
+  }),
+
+  leads: defineTable({
+    listingId: v.id("listings"),
+    name: v.string(),
+    status: v.union(
+      v.literal("inquiry"),
+      v.literal("negotiation"),
+      v.literal("closing")
+    ),
+  }),
 });

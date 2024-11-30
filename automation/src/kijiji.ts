@@ -76,7 +76,7 @@ export const postKijijiAd = async (
   await new Promise((resolve) => setTimeout(resolve, 1000));
   await fileChooser.setFiles(tempFile);
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  // await fs.promises.unlink(tempFile); 
+  await fs.promises.unlink(tempFile); 
   await new Promise((resolve) => setTimeout(resolve, 1000));
   await kijijiStagehand.page.fill("#PriceAmount", price.toString());
   const submitButtons = await kijijiStagehand.page

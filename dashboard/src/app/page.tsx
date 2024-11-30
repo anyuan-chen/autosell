@@ -16,11 +16,16 @@ import { Label } from "@/components/ui/label";
 import { useUpload } from "@/hooks/use-upload";
 import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useR2Url } from "@/hooks/use-r2-url";
 
 export default function ListingsPage() {
+  const createListing = useMutation(api.listings.create);
   const { uploadFile, isUploading, progress } = useUpload();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
+  const { getUrl } = useR2Url();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -29,13 +34,62 @@ export default function ListingsPage() {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    console.log("handling upload");
+    if (!selectedFile) {
+      console.log("No file selected");
+      return;
+    }
 
-    const key = await uploadFile(selectedFile);
-    if (key) {
-      console.log("File uploaded successfully:", key);
-      setOpen(false);
-      setSelectedFile(null);
+    try {
+      const key = await uploadFile(selectedFile);
+      if (key) {
+        const fileUrl = await getUrl(key);
+        if (!fileUrl) {
+          throw "Failed to get file URL";
+        }
+
+        const analyzeResponse = await fetch("/api/analyze-image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ imageUrl: fileUrl }),
+        });
+        const analyzeData = await analyzeResponse.json();
+        console.log(analyzeData);
+
+        if (!analyzeData.success) {
+          throw new Error(analyzeData.error);
+        }
+
+        const generateResponse = await fetch("/api/generate-listing", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ productInfo: analyzeData.text }),
+        });
+        const generateData = await generateResponse.json();
+        console.log(generateData);
+
+        if (!generateData.success) {
+          throw new Error(generateData.error);
+        }
+
+        const listing = generateData.listing;
+
+        await createListing({
+          src: key,
+          title: listing.title,
+          description: listing.description,
+          price: listing.price,
+        });
+
+        setOpen(false);
+        setSelectedFile(null);
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
     }
   };
 
@@ -45,37 +99,57 @@ export default function ListingsPage() {
         <h1 className="text-2xl font-bold">Listings</h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => setSelectedFile(null)}>
               <Plus className="mr-2 h-4 w-4" /> Create New
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle>Create New Listing</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="file">Upload File</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  onChange={handleFileChange}
-                  disabled={isUploading}
-                />
-                {isUploading && (
-                  <Progress value={progress} className="w-full" />
-                )}
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="submit"
-                onClick={handleUpload}
-                disabled={!selectedFile || isUploading}
-              >
-                {isUploading ? "Uploading..." : "Upload"}
-              </Button>
-            </DialogFooter>
+            {!isUploading ? (
+              <>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="file">Upload File</Label>
+                    <Input
+                      id="file"
+                      type="file"
+                      onChange={handleFileChange}
+                      disabled={isUploading}
+                    />
+                    {isUploading && (
+                      <Progress value={progress} className="w-full" />
+                    )}
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    onClick={handleUpload}
+                    disabled={!selectedFile || isUploading}
+                  >
+                    {isUploading ? "Uploading..." : "Upload"}
+                  </Button>
+                </DialogFooter>
+              </>
+            ) : (
+              <>
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="text-4xl mb-4">🎉</div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Upload Complete!
+                  </h3>
+                  <p className="text-gray-600 text-center">
+                    We are posting your file to a Kijji, Facebook, and your
+                    Shopify site.
+                  </p>
+                  <Button onClick={() => setOpen(false)} className="mt-4">
+                    Done
+                  </Button>
+                </div>
+              </>
+            )}
           </DialogContent>
         </Dialog>
       </div>

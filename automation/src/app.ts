@@ -23,7 +23,7 @@ const postDetails: CraigsListPostDetails = {
 
 const run = async () => {
  await runCraigsListLogin(craiglistStagehand)
- await postCraigsListAd(craiglistStagehand, CraigsListSaleCategory.MusicalInstruments, postDetails)
+ await postCraigsListAd("https://www.uwo.ca/img/about/bnr/about_western_mobile.jpg", craiglistStagehand, CraigsListSaleCategory.MusicalInstruments, postDetails)
 }
 
 run()

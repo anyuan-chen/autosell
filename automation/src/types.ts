@@ -109,14 +109,15 @@ export enum CraigsListSaleCategory {
 }
 
 export type CraigsListPostDetails = {
-  postingTitle: String; // required
-  price: number; // required  
-  cityOrNeighbourhood?: String;
-  zipCode: String; // required
-  description: String; // required
+  postingTitle: string; 
+  price: number;   
+  cityOrNeighbourhood?: string;
+  zipCode?: string; 
+  description: string; 
   postingDetails?: CraigsListPostingDetails;
   replyOptions?: CraigListReplyOptions;
   locationInfo?: CraigListLocationInfo;
+  imageURL?: string;
 
 }
 
@@ -125,9 +126,9 @@ type CraigsListItemCondition = "new" | "like new" | "excellent" | "good" | "fair
 type CraigsListPostingDetails = {
   makeManufacturer: String;
   condition: CraigsListItemCondition; 
-  modelNameNum: String; 
-  dimensions: String;
-  languageOfPosting: String;
+  modelNameNum: string; 
+  dimensions: string;
+  languageOfPosting: string;
   crpytoPay?: boolean;
   delivery? : boolean;
   includeMoreAdsLink: boolean;
@@ -139,7 +140,7 @@ type CraigListReplyOptions = {
 }
 
 type CraigListLocationInfo = {
-  street: String;
-  crossStreet: String;
-  city: String;
+  street: string;
+  crossStreet: string;
+  city: string;
 }

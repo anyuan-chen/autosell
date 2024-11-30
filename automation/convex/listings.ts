@@ -20,6 +20,25 @@ export const getAll = query({
   },
 });
 
+export const get = query({
+  args: { src: v.string() },
+  handler: async (ctx, args) => {
+    const listing = await ctx.db
+      .query("listings")
+      .filter((q) => q.eq(q.field("src"), args.src))
+      .first();
+    if (!listing) return null;
+
+    const leads = await ctx.db
+      .query("leads")
+      .filter((q) => q.eq(q.field("listingId"), listing._id))
+      .collect();
+
+    return { ...listing, leads };
+  },
+});
+
+
 export const upsert = mutation({
   args: {
     title: v.optional(v.string()),

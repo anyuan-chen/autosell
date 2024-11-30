@@ -33,47 +33,26 @@ app.use(express.json());
 
 // @ts-ignore
 app.post("/post-kijiji", async (req: Request, res: Response) => {
-  const { src } = req.body;
-  if (!src) {
-    return res.status(400).json({ error: "Image source URL is required" });
+  const { src } = req.query;
+  if (!src || typeof src !== 'string') {
+    return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
-  console.log(src)
 
-  const productInfo = await generateText({
-    model: openai('gpt-4o'),
-    messages: [{
-      "role" : "user",
-      "content": [
-        {"type": "image", "image": `${src}`},
-        {"type": "text", text: "Analyze this product image and tell me what is the exact product model name of this item? Be detailed."}
-      ]
-    }]
+  const listing = await client.query(api.listings.get, {
+    src: src
   });
-  console.log(productInfo.text)
-  const response = await generateObject({
-    model: openai('gpt-4o'),
-    prompt: `Here is some information about a product: ${productInfo.text}. Based on this information, generate a Kijiji listing with the following fields:
-    - title: A clear, descriptive title under 40 characters
-    - description: A detailed product description
-    - price: A reasonable price in CAD
-    - category: One of the following Kijiji categories: ${Object.values(KijijiCategory).join(', ')}
-    - subcategory: If applicable, a relevant subcategory`,
-    schema: z.object({
-      title: z.string(),
-      description: z.string(),
-      price: z.number(),
-      category: z.nativeEnum(KijijiCategory),
-      subcategory: z.nativeEnum(KijijiMusicalInstrumentCategory).optional()
-    })
-  })
+  if (!listing) {
+    return res.status(404).json({ error: "Listing not found" });
+  }
+
   try {
     const url = await postKijijiAd(
       src,
-      response.object.title,
-      response.object.description,
-      response.object.price,
-      response.object.category,
-      response.object.subcategory
+      listing.title,
+      listing.description,
+      listing.price,
+      listing.category,
+      listing.subcategory
     )
     
   } catch(error){

@@ -38,26 +38,6 @@ export const createShopifyProduct = async (
   category: ShopifyCategory,
   subcategory: ShopifySubCategory,
 ) => {
-  //   const downloadImage = async (image_url: URL | string) => {
-  //     const url =
-  //       typeof image_url === "string" ? image_url : image_url.toString();
-
-  //     if (!url.startsWith("http://") && !url.startsWith("https://")) {
-  //       throw new Error("Invalid URL: Only HTTP(S) protocols are supported");
-  //     }
-
-  //     const response = await fetch(url);
-  //     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-  //     const buffer = await response.buffer();
-  //     const imagePath = path.join("product_image.webp");
-
-  //     fs.writeFileSync(imagePath, buffer);
-  //     console.log(`Image saved to ${imagePath}`);
-  //   };
-
-  //   downloadImage(image).catch(console.error);
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const titleBox = stagehand.page.locator(

@@ -28,9 +28,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import MapComponent from "@/components/map-search";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 type Location = {
-  id: string;
+  _id: string;
   name: string;
   coordinates: [number, number];
   fullText: string;
@@ -44,7 +46,7 @@ type Location = {
 
 function SortableLocation({ location }: { location: Location }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: location.id });
+    useSortable({ id: location._id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -82,7 +84,9 @@ function SortableLocation({ location }: { location: Location }) {
 }
 
 export default function LocationList() {
-  const [locations, setLocations] = useState<Location[]>([]);
+  const locations = useQuery(api.locations.getAll);
+  const replaceAll = useMutation(api.locations.replaceAll);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newLocation, setNewLocation] = useState<Location | null>(null);
 
@@ -107,18 +111,24 @@ export default function LocationList() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (active.id !== over?.id) {
-      setLocations((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
+    if (active.id !== over?.id && locations) {
+      const newLocations = [...locations];
+      const oldIndex = newLocations.findIndex((item) => item._id === active.id);
+      const newIndex = newLocations.findIndex((item) => item._id === over?.id);
+      const reorderedLocations = arrayMove(newLocations, oldIndex, newIndex);
+      const locationsWithRank = reorderedLocations.map((loc, idx) => ({
+        ...loc,
+        rank: idx,
+      }));
+      replaceAll({ locations: locationsWithRank });
     }
   };
 
-  const addLocation = () => {
-    if (newLocation) {
-      setLocations([...locations, newLocation]);
+  const addLocation = async () => {
+    if (newLocation && locations) {
+      await replaceAll({
+        locations: [{ ...newLocation, rank: locations.length }],
+      });
       setNewLocation(null);
       setIsDialogOpen(false);
     }
@@ -146,11 +156,10 @@ export default function LocationList() {
                       (prev) =>
                         ({
                           ...prev,
-                          id: Date.now().toString(),
                           coordinates: [lng, lat],
                           name,
                           fullText,
-                        } as Location)
+                        }) as Location
                     );
                     fetch(
                       `/api/ai/location-safety?location=${encodeURIComponent(
@@ -159,7 +168,6 @@ export default function LocationList() {
                     )
                       .then((res) => res.json())
                       .then((safetyInfo) => {
-                        console.log(safetyInfo);
                         setNewLocation((prev) => {
                           if (!prev) return null;
                           return {
@@ -223,7 +231,7 @@ export default function LocationList() {
         </Dialog>
       </div>
 
-      {locations.length === 0 ? (
+      {!locations || locations.length === 0 ? (
         <div className="text-center py-32 text-gray-500">
           No locations added yet.
         </div>
@@ -234,12 +242,21 @@ export default function LocationList() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={locations}
+            items={locations.map((location) => ({ id: location._id }))}
             strategy={verticalListSortingStrategy}
           >
             <ul className="space-y-2">
               {locations.map((location) => (
-                <SortableLocation key={location.id} location={location} />
+                <SortableLocation
+                  key={location.name}
+                  location={{
+                    ...location,
+                    coordinates: [
+                      location.coordinates[0],
+                      location.coordinates[1],
+                    ] as [number, number],
+                  }}
+                />
               ))}
             </ul>
           </SortableContext>

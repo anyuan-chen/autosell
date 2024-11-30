@@ -3,6 +3,7 @@ import "./globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Inter } from "next/font/google";
+import { ConvexClientProvider } from "./ConvexClientProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,15 +22,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${inter.variable} ${inter.variable} antialiased`}
-      >
+      <body className={`${inter.variable} ${inter.variable} antialiased`}>
         <div>
           <SidebarProvider>
             <AppSidebar />
             <main className="w-full">
               <SidebarTrigger />
-              {children}
+              <ConvexClientProvider>{children}</ConvexClientProvider>
             </main>
           </SidebarProvider>
         </div>

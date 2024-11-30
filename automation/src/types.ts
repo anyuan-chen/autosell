@@ -184,6 +184,13 @@ export enum CraigsListSaleCategory {
   Wanted = "Wanted",
 }
 
+export enum NegotiationStage {
+  Preliminary = "Preliminary",
+  PriceNegotiation = "Price Negotiation",
+  Deal = "Deal",
+  Meetup = "Meetup",
+}
+
 export type CraigsListPostDetails = {
   postingTitle: string;
   price: number;

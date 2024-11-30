@@ -180,7 +180,7 @@ app.post("/post", async (req: Request, res: Response) => {
       craigslistUrl
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error });
   }
 });
 

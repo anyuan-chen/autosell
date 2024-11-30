@@ -21,6 +21,7 @@ export default defineSchema({
     title: v.string(),
     price: v.number(),
     kijijiLink: v.optional(v.string()),
+    shopifyLink: v.optional(v.string()),
     craigslistLink: v.optional(v.string()),
   }),
 

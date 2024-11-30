@@ -59,3 +59,31 @@ export enum KijijiClothingCategory {
   Other = "Other",
   WomensOther = "Women's - Other",
 }
+
+export enum ShopifyCategory {
+  ApparelAndAccessories = "Apparel & Accessories",
+  ArtsAndCrafts = "Arts & Crafts",
+  Automotive = "Automotive",
+  BabyAndKids = "Baby & Kids",
+  BeautyAndPersonalCare = "Beauty & Personal Care",
+  BooksAndStationery = "Books & Stationery",
+  ConsumerElectronics = "Consumer Electronics",
+  FoodAndBeverages = "Food & Beverages",
+  Furniture = "Furniture",
+  HealthAndWellness = "Health & Wellness",
+  HomeAndLiving = "Home & Living",
+  JewelryAndWatches = "Jewelry & Watches",
+  MusicalInstruments = "Musical Instruments",
+  OfficeSupplies = "Office Supplies",
+  PetSupplies = "Pet Supplies",
+  ShoesAndFootwear = "Shoes & Footwear",
+  SportingGoods = "Sporting Goods",
+  ToysAndGames = "Toys & Games",
+  TravelAndLuggage = "Travel & Luggage",
+  VideoGamesAndConsoles = "Video Games & Consoles",
+  Other = "Other",
+}
+
+export enum ShopifySubCategory {
+  SomeTestSubCategory = "Some Test SubCategory",
+}

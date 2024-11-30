@@ -27,6 +27,9 @@ const run = async () => {
     "product-test",
     "description-test",
     100,
+    new URL(
+      "https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_UF894,1000_QL80_.jpg",
+    ),
     ShopifyStagehand,
     ShopifyCategory.ApparelAndAccessories,
     ShopifySubCategory.SomeTestSubCategory,

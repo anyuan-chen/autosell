@@ -117,8 +117,6 @@ export type CraigsListPostDetails = {
   postingDetails?: CraigsListPostingDetails;
   replyOptions?: CraigListReplyOptions;
   locationInfo?: CraigListLocationInfo;
-  imageURL?: string;
-
 }
 
 type CraigsListItemCondition = "new" | "like new" | "excellent" | "good" | "fair" | "salvage"

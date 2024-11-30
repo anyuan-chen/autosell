@@ -37,6 +37,84 @@ app.use(
 
 app.use(express.json());
 
+
+const postToKijiji = async (src: string) => {
+  const listing = await client.query(api.listings.get, { src });
+  if (!listing) {
+    throw new Error("Listing not found");
+  }
+
+  try {
+    await postKijijiAd(
+      src,
+      listing.title,
+      listing.description, 
+      listing.price,
+    );
+  } catch (error) {
+    console.error("Error posting Kijiji ad:", error);
+    throw new Error("Failed to post Kijiji ad\n" + error);
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  let url = await kijijiStagehand.page.url();
+  console.log("Final URL:", url);
+
+  return url?.indexOf("posted") === -1 
+    ? url
+    : url.substring(0, url.indexOf("posted"));
+};
+
+const postToShopify = async (src: string) => {
+  const listing = await client.query(api.listings.get, { src });
+  if (!listing) {
+    throw new Error("Listing not found");
+  }
+
+  try {
+    await postShopifyAd(
+      src,
+      listing.title,
+      listing.description,
+      listing.price,
+    );
+  } catch (error) {
+    console.error("Error posting Shopify ad:", error);
+    throw new Error("Failed to post Shopify ad\n" + error);
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  let url = await shopifyStagehand.page.url();
+  console.log("Final URL:", url);
+
+  return url;
+};
+
+const postToCraigslist = async (src: string) => {
+  const listing = await client.query(api.listings.get, { src });
+  if (!listing) {
+    throw new Error("Listing not found");
+  }
+
+  try {
+    await postCraigsListAd(
+      src,
+      listing.title,
+      listing.description,
+      listing.price,
+    );
+  } catch (error) {
+    console.error("Error posting Craigslist ad:", error);
+    throw new Error("Failed to post Craigslist ad\n" + error);
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  let url = await craigslistStagehand.page.url();
+  console.log("Final URL:", url);
+
+  return url;
+};
+
 // @ts-ignore
 app.post("/post-kijiji", async (req: Request, res: Response) => {
   const { src } = req.query;
@@ -44,37 +122,11 @@ app.post("/post-kijiji", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
 
-  const listing = await client.query(api.listings.get, {
-    src: src,
-  });
-  if (!listing) {
-    return res.status(404).json({ error: "Listing not found" });
-  }
-
   try {
-    const url = await postKijijiAd(
-      src,
-      listing.title,
-      listing.description,
-      listing.price,
-    );
-  } catch (error) {
-    console.error("Error posting Kijiji ad:", error);
-    return res
-      .status(500)
-      .json({ error: "Failed to post Kijiji ad\n" + error });
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  let url = await kijijiStagehand.page.url();
-  console.log("Final URL:", url);
-
-  if (!url || url.indexOf("posted") === -1) {
+    const url = await postToKijiji(src);
     res.send({ url });
-  } else {
-    res.send({
-      url: url.substring(0, url.indexOf("posted")),
-    });
+  } catch (error) {
+    res.status(500).json({ error: error });
   }
 });
 
@@ -85,38 +137,11 @@ app.post("/post-shopify", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
 
-  const listing = await client.query(api.listings.get, {
-    src: src,
-  });
-
-  if (!listing) {
-    return res.status(404).json({ error: "Listing not found" });
-  }
-
   try {
-    const url = await postShopifyAd(
-      src,
-      listing.title,
-      listing.description,
-      listing.price,
-    );
-  } catch (error) {
-    console.error("Error posting Kijiji ad:", error);
-    return res
-      .status(500)
-      .json({ error: "Failed to post Kijiji ad\n" + error });
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  let url = await shopifyStagehand.page.url();
-  console.log("Final URL:", url);
-
-  if (!url || url.indexOf("posted") === -1) {
+    const url = await postToShopify(src);
     res.send({ url });
-  } else {
-    res.send({
-      url
-    });
+  } catch (error) {
+    res.status(500).json({ error: error });
   }
 });
 
@@ -127,38 +152,35 @@ app.post("/post-craigslist", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
 
-  const listing = await client.query(api.listings.get, {
-    src: src,
-  });
+  try {
+    const url = await postToCraigslist(src);
+    res.send({ url });
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
+});
 
-  if (!listing) {
-    return res.status(404).json({ error: "Listing not found" });
+// @ts-ignore
+app.post("/post", async (req: Request, res: Response) => {
+  const { src } = req.query;
+  if (!src || typeof src !== "string") {
+    return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
 
   try {
-    const url = await postCraigsListAd(
-      src,
-      listing.title,
-      listing.description,
-      listing.price,
-    );
-  } catch (error) {
-    console.error("Error posting Craigslist ad:", error);
-    return res
-      .status(500)
-      .json({ error: "Failed to post Craigslist ad\n" + error });
-  }
+    const [kijijiUrl, shopifyUrl, craigslistUrl] = await Promise.all([
+      postToKijiji(src),
+      postToShopify(src),
+      postToCraigslist(src)
+    ]);
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  let url = await craigslistStagehand.page.url();
-  console.log("Final URL:", url);
-
-  if (!url || url.indexOf("posted") === -1) {
-    res.send({ url });
-  } else {
     res.send({
-      url
+      kijijiUrl,
+      shopifyUrl,
+      craigslistUrl
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 

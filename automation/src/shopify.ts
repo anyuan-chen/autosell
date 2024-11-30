@@ -3,40 +3,45 @@ import * as path from "path";
 import { z } from "zod";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Locator } from "playwright-core";
-import { ShopifyCategory, ShopifySubCategory } from "types";
+import { ShopifyCategory } from "types";
 import fetch from "node-fetch";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { shopifyStagehand } from "app";
 
-export const runShopifyLogin = async (stagehand: Stagehand) => {
-  await stagehand.init({ domSettleTimeoutMs: 40000, modelName: "gpt-4o" });
-  await stagehand.page.goto(
+const runShopifyLogin = async () => {
+  await shopifyStagehand.init({
+    domSettleTimeoutMs: 40000,
+    modelName: "gpt-4o",
+  });
+  await shopifyStagehand.page.goto(
     "https://admin.shopify.com/store/1yzxxw-m0/products/new",
   );
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  await stagehand.page.fill("#account_email", "whcpeterwangca@gmail.com");
-  await stagehand.act({
+  await shopifyStagehand.page.fill(
+    "#account_email",
+    "whcpeterwangca@gmail.com",
+  );
+  await shopifyStagehand.act({
     action: "Click on the continue with email button",
   });
-  await stagehand.page.fill(
+  await shopifyStagehand.page.fill(
     "#account_password",
     `${process.env.SHOPIFY_PASSWORD}`,
   );
-  await stagehand.act({
+  await shopifyStagehand.act({
     action: "click on the log in button",
   });
   await new Promise((resolve) => setTimeout(resolve, 1000));
 };
 
-export const createShopifyProduct = async (
+const createShopifyProduct = async (
   title: string,
   description: string,
   price: number,
   image: URL,
   stagehand: Stagehand,
-  category: ShopifyCategory,
-  subcategory: ShopifySubCategory,
 ) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -81,4 +86,14 @@ export const createShopifyProduct = async (
   await submitButton.click();
 
   return stagehand.page.url();
+};
+
+export const postShopifyAd = async (
+  src: string,
+  title: string,
+  description: string,
+  price: number,
+  category: ShopifyCategory,
+) => {
+  runShopifyLogin();
 };

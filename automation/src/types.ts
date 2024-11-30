@@ -1,3 +1,9 @@
+export enum ecommercePlatform {
+  Shopify = "Shopify",
+  Kijiji = "Kijiji",
+  Craigslist = "Craigslist",
+}
+
 export enum KijijiCategory {
   ArtsAndCollectibles = "Arts & Collectibles",
   Audio = "Audio",
@@ -61,29 +67,35 @@ export enum KijijiClothingCategory {
 }
 
 export enum ShopifyCategory {
-  ApparelAndAccessories = "Apparel & Accessories",
-  ArtsAndCrafts = "Arts & Crafts",
-  Automotive = "Automotive",
-  BabyAndKids = "Baby & Kids",
-  BeautyAndPersonalCare = "Beauty & Personal Care",
-  BooksAndStationery = "Books & Stationery",
-  ConsumerElectronics = "Consumer Electronics",
-  FoodAndBeverages = "Food & Beverages",
-  Furniture = "Furniture",
-  HealthAndWellness = "Health & Wellness",
-  HomeAndLiving = "Home & Living",
-  JewelryAndWatches = "Jewelry & Watches",
-  MusicalInstruments = "Musical Instruments",
-  OfficeSupplies = "Office Supplies",
-  PetSupplies = "Pet Supplies",
-  ShoesAndFootwear = "Shoes & Footwear",
-  SportingGoods = "Sporting Goods",
-  ToysAndGames = "Toys & Games",
-  TravelAndLuggage = "Travel & Luggage",
-  VideoGamesAndConsoles = "Video Games & Consoles",
-  Other = "Other",
+  ApparelAndAccessories = "Electronics",
+  ArtsAndEntertainment = "Arts & Entertainment",
+  Electornics = "Electronics",
 }
 
-export enum ShopifySubCategory {
-  SomeTestSubCategory = "Some Test SubCategory",
+export enum ShopifyClothingCategory {
+  Clothing = "Clothing",
+  ClothingAccessories = "Clothing Accessories",
+  CostumeAndAccessories = "Costume & Accessories",
+  HandbagAndWalletAccessories = "Handbag & Wallet Accessories",
 }
+
+export enum ShopifyElectronicsCategory {
+  ArcadeEquipment = "Arcade Equipment",
+  GPSTrackingDevice = "GPS Tracking Device",
+  MarineElectronics = "Marine Electronics",
+  Networking = "Networking",
+  PrintCopyScanFax = "Print Copy Scan & Fax",
+  RadarDetector = "Radar Detector",
+  SpeedRadar = "Speed Radar",
+  TollCollectionDevice = "Toll Collection Device",
+  Video = "Video",
+  VideoGameConsoleAccessories = "Video Game Console Accessories",
+  VideoGameConsoles = "Video Game Consoles",
+  Audio = "Audio",
+  CircuitBoardsComponents = "Circuit Boards & Components",
+  Communications = "Communications",
+  Components = "Components",
+  Computers = "Computers",
+}
+
+export enum ShopifyMusicalInstrumentCategory {}

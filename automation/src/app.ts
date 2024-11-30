@@ -5,10 +5,6 @@ import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
 import { postKijijiAd, responder, runKijijiLogin } from "kijiji.js";
-import { generateObject, generateText } from "ai";
-import { z } from "zod";
-import { openai } from "@ai-sdk/openai";
-import { KijijiCategory, KijijiMusicalInstrumentCategory } from "types.js";
 import { postShopifyAd } from "shopify.js";
 
 dotenv.config({ path: ".env.local" });
@@ -65,12 +61,10 @@ app.post("/post-kijiji", async (req: Request, res: Response) => {
       .json({ error: "Failed to post Kijiji ad\n" + error });
   }
 
-  // Wait for the page to settle after posting
   await new Promise((resolve) => setTimeout(resolve, 2000));
   let url = await kijijiStagehand.page.url();
   console.log("Final URL:", url);
 
-  // If URL is empty or doesn't contain expected pattern, return full URL
   if (!url || url.indexOf("posted") === -1) {
     res.send({ url });
   } else {
@@ -109,12 +103,10 @@ app.post("/post-shopify", async (req: Request, res: Response) => {
       .json({ error: "Failed to post Kijiji ad\n" + error });
   }
 
-  // Wait for the page to settle after posting
   await new Promise((resolve) => setTimeout(resolve, 2000));
   let url = await shopifyStagehand.page.url();
   console.log("Final URL:", url);
 
-  // If URL is empty or doesn't contain expected pattern, return full URL
   if (!url || url.indexOf("posted") === -1) {
     res.send({ url });
   } else {

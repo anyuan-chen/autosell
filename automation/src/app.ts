@@ -4,16 +4,28 @@ import cors from "cors";
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { postKijijiAd, responder, runKijijiLogin } from "kijiji.js";
 import { generateObject, generateText } from "ai";
 import { z } from "zod";
 import { openai } from "@ai-sdk/openai";
 import { KijijiCategory, KijijiMusicalInstrumentCategory } from "types.js";
+=======
+import { postKijijiAd } from "kijiji.js";
+>>>>>>> Stashed changes
+=======
+import { postKijijiAd } from "kijiji.js";
+>>>>>>> Stashed changes
 import { postShopifyAd } from "shopify.js";
 
 dotenv.config({ path: ".env.local" });
 
-export const responderStagehand = new Stagehand({
+export const kijijiResponseStagehand = new Stagehand({
+<<<<<<< Updated upstream
+export const kijijiResponseStagehand = new Stagehand({
+=======
+>>>>>>> Stashed changes
   env: "LOCAL",
 });
 export const kijijiStagehand = new Stagehand({

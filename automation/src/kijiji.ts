@@ -4,20 +4,30 @@ import { z } from "zod";
 import fs from "fs";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Locator } from "playwright-core";
-import { kijijiStagehand, responderStagehand } from "app";
+import { kijijiStagehand, kijijiResponseStagehand } from "app";
 import {
   KijijiCategory,
   KijijiClothingCategory,
   KijijiMusicalInstrumentCategory,
-  KijijiToCategoryMap,
 } from "types";
 import { generateObject, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { create } from "ts-node";
 
 export type KijijiSubcategory =
   | KijijiClothingCategory
   | KijijiMusicalInstrumentCategory;
+
+const NegotiationPrompt = `
+  You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. I will pretend to negotiate with you and after every response, I want you to tell me what stage of the negotiation we are currently in out of the following categories! 
+  export enum NegotiationStage { 
+    Preliminary = "Preliminary", 
+    PriceNegotiation = "Price Negotiation", 
+    Deal = "Deal", 
+    Meetup = "Meetup", 
+  } 
+  Let's say you are selling airpods pro for 250 dollars. Make sure you don't go below 225 dollars. 
+  After you guys agree on a price, suggest places to meetup for the sale. 
+  Let the roleplay begin`;
 
 const generateKijijiInfo = async (src: string) => {
   const productInfo = await generateText({
@@ -85,8 +95,6 @@ export const createKijijiAd = async (
   await new Promise((resolve) => setTimeout(resolve, 300));
   const buyAndSell = await kijijiStagehand.page.getByText("Buy & Sell");
 
-  const kijijiInfo = await generateKijijiInfo(src);
-
   let buyAndSellButton;
   for (const element of await buyAndSell.all()) {
     if (!(await element.getAttribute("class"))?.includes("pathBreadcrumb")) {
@@ -137,20 +145,20 @@ export const createKijijiAd = async (
 };
 
 const respondToKijiji = async () => {
-  const url = await responderStagehand.page.url();
+  const url = await kijijiResponseStagehand.page.url();
   await new Promise((resolve) => setTimeout(resolve, 4000));
   console.log(url);
 };
 
 const messageScanner = async () => {
-  const currentUrl = await responderStagehand.page.url();
+  const currentUrl = await kijijiResponseStagehand.page.url();
   if (currentUrl !== "https://www.kijiji.ca/m-msg-my-messages/") {
-    await responderStagehand.page.goto(
+    await kijijiResponseStagehand.page.goto(
       "https://www.kijiji.ca/m-msg-my-messages/",
     );
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  const listParent = await responderStagehand.page.locator(
+  const listParent = await kijijiResponseStagehand.page.locator(
     `[data-testid="conversation-list"]`,
   );
 
@@ -174,15 +182,15 @@ const messageScanner = async () => {
       await conversation.click({
         modifiers: ["Meta"],
       });
-      await responderStagehand.page.context().waitForEvent("page");
-      const pages = responderStagehand.page.context().pages();
+      await kijijiResponseStagehand.page.context().waitForEvent("page");
+      const pages = kijijiResponseStagehand.page.context().pages();
       const newPage = pages[pages.length - 1];
       await newPage.waitForLoadState();
-      const originalPage = responderStagehand.page;
-      responderStagehand.page = newPage;
+      const originalPage = kijijiResponseStagehand.page;
+      kijijiResponseStagehand.page = newPage;
       await respondToKijiji();
       await newPage.close();
-      responderStagehand.page = originalPage;
+      kijijiResponseStagehand.page = originalPage;
       await new Promise((resolve) => setTimeout(resolve, 500));
       break;
     }
@@ -211,5 +219,5 @@ export const postKijijiAd = async (
 
 export async function responder() {
   await messageScanner();
-  setTimeout(responder, 10000);
+  setTimeout(responder, 1000);
 }

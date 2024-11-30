@@ -59,3 +59,87 @@ enum KijijiClothingCategory {
   Other = "Other",
   WomensOther = "Women's - Other",
 }
+
+export enum CraigsListSaleCategory {
+  Antiques = "Antiques",  
+  Appliances = "Appliances",  
+  ArtsCrafts = "Arts & Crafts",  
+  ATVsUTVsSnowmobiles = "ATVs, UTVs, Snowmobiles",  
+  AutoParts = "Auto Parts",  
+  AutoWheelsTires = "Auto Wheels & Tires",  
+  Aviation = "Aviation",  
+  BabyKidStuff = "Baby & Kid Stuff",  
+  Barter = "Barter",  
+  BicycleParts = "Bicycle Parts",  
+  Bicycles = "Bicycles",  
+  BoatParts = "Boat Parts",  
+  Boats = "Boats",  
+  BooksMagazines = "Books & Magazines",  
+  BusinessCommercial = "Business/Commercial",  
+  CarsTrucks = "Cars & Trucks",  
+  CDsDVDsVHS = "CDs / DVDs / VHS",  
+  CellPhones = "Cell Phones",  
+  ClothingAccessories = "Clothing & Accessories",  
+  Collectibles = "Collectibles",  
+  ComputerParts = "Computer Parts",  
+  Computers = "Computers",  
+  Electronics = "Electronics",  
+  FarmGarden = "Farm & Garden",  
+  FreeStuff = "Free Stuff",  
+  Furniture = "Furniture",  
+  GarageMovingSales = "Garage & Moving Sales",  
+  GeneralForSale = "General For Sale",  
+  HealthBeauty = "Health and Beauty",  
+  HeavyEquipment = "Heavy Equipment",  
+  HouseholdItems = "Household Items",  
+  Jewelry = "Jewelry",  
+  Materials = "Materials",  
+  MotorcycleParts = "Motorcycle Parts",  
+  MotorcyclesScooters = "Motorcycles/Scooters",  
+  MusicalInstruments = "Musical Instruments",  
+  PhotoVideo = "Photo/Video",  
+  RVs = "RVs",  
+  SportingGoods = "Sporting Goods",  
+  Tickets = "Tickets",  
+  Tools = "Tools",  
+  ToysGames = "Toys & Games",  
+  Trailers = "Trailers",  
+  VideoGaming = "Video Gaming",  
+  Wanted = "Wanted",
+}
+
+export type CraigsListPostDetails = {
+  postingTitle: String; // required
+  price: number; // required  
+  cityOrNeighbourhood?: String;
+  zipCode: String; // required
+  description: String; // required
+  postingDetails?: CraigsListPostingDetails;
+  replyOptions?: CraigListReplyOptions;
+  locationInfo?: CraigListLocationInfo;
+
+}
+
+type CraigsListItemCondition = "new" | "like new" | "excellent" | "good" | "fair" | "salvage"
+
+type CraigsListPostingDetails = {
+  makeManufacturer: String;
+  condition: CraigsListItemCondition; 
+  modelNameNum: String; 
+  dimensions: String;
+  languageOfPosting: String;
+  crpytoPay?: boolean;
+  delivery? : boolean;
+  includeMoreAdsLink: boolean;
+}
+
+type CraigListReplyOptions = {
+  CLChat: boolean;
+  publishPhoneNumber: boolean;
+}
+
+type CraigListLocationInfo = {
+  street: String;
+  crossStreet: String;
+  city: String;
+}

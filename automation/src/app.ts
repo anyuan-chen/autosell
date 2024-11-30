@@ -5,33 +5,25 @@ import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
 import { responder } from "kijiji.js";
+import { runCraigsListLogin, postCraigsListAd } from "craiglist.js";
+import { CraigsListPostDetails, CraigsListSaleCategory } from "types.js";
 
 dotenv.config({ path: ".env.local" });
 
-export const responderStagehand = new Stagehand({
-  env: "LOCAL",
-});
-export const kijijiStagehand = new Stagehand({
-  env: "LOCAL",
-});
-const client = new ConvexHttpClient(process.env.CONVEX_URL || "");
-responder()
+export const craiglistStagehand = new Stagehand({
+  env: "LOCAL"
+})
 
-const app = express();
-const port = process.env.PORT || 3001;
+const postDetails: CraigsListPostDetails = {
+  postingTitle: "peter's big stick",
+  price: 999,
+  zipCode: "N6A 3K7:",
+  description: "lalalalalal no description needed"
+}
 
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+const run = async () => {
+ await runCraigsListLogin(craiglistStagehand)
+ await postCraigsListAd(craiglistStagehand, CraigsListSaleCategory.MusicalInstruments, postDetails)
+}
 
-app.use(express.json());
-
-app.get("/", async (_req: express.Request, res: express.Response) => {
-  console.log(await client.query(api.locations.getAll))
-  res.send("Server is running");
-});
-
-app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
+run()

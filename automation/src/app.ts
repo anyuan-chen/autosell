@@ -6,6 +6,7 @@ import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
 import { postKijijiAd, responder, runKijijiLogin } from "kijiji.js";
 import { postShopifyAd } from "shopify.js";
+import { postCraigsListAd } from "craiglist.js";
 
 dotenv.config({ path: ".env.local" });
 
@@ -13,6 +14,9 @@ export const responderStagehand = new Stagehand({
   env: "LOCAL",
 });
 export const kijijiStagehand = new Stagehand({
+  env: "LOCAL",
+});
+export const craigslistStagehand = new Stagehand({
   env: "LOCAL",
 });
 export const shopifyStagehand = new Stagehand({
@@ -111,7 +115,49 @@ app.post("/post-shopify", async (req: Request, res: Response) => {
     res.send({ url });
   } else {
     res.send({
-      url: url.substring(0, url.indexOf("posted")),
+      url
+    });
+  }
+});
+
+// @ts-ignore
+app.post("/post-craigslist", async (req: Request, res: Response) => {
+  const { src } = req.query;
+  if (!src || typeof src !== "string") {
+    return res.status(400).json({ error: "Missing or invalid src parameter" });
+  }
+
+  const listing = await client.query(api.listings.get, {
+    src: src,
+  });
+
+  if (!listing) {
+    return res.status(404).json({ error: "Listing not found" });
+  }
+
+  try {
+    const url = await postCraigsListAd(
+      src,
+      listing.title,
+      listing.description,
+      listing.price,
+    );
+  } catch (error) {
+    console.error("Error posting Craigslist ad:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to post Craigslist ad\n" + error });
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  let url = await craigslistStagehand.page.url();
+  console.log("Final URL:", url);
+
+  if (!url || url.indexOf("posted") === -1) {
+    res.send({ url });
+  } else {
+    res.send({
+      url
     });
   }
 });

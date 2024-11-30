@@ -1,4 +1,4 @@
-enum KijijiCategory {
+export enum KijijiCategory {
   ArtsAndCollectibles = "Arts & Collectibles",
   Audio = "Audio",
   BabyItems = "Baby Items",
@@ -30,7 +30,7 @@ enum KijijiCategory {
   VideoGamesAndConsoles = "Video Games & Consoles",
 }
 
-enum KijijiMusicalInstrumentCategory {
+export enum KijijiMusicalInstrumentCategory {
   AmpsAndPedals = "Amps & Pedals",
   Brass = "Brass",
   DrumsAndPercussion = "Drums & Percussion",
@@ -43,7 +43,7 @@ enum KijijiMusicalInstrumentCategory {
   Other = "Other",
 }
 
-enum KijijiClothingCategory {
+export enum KijijiClothingCategory {
   Costumes = "Costumes",
   KidsAndYouth = "Kids & Youth",
   Mens = "Men's",
@@ -58,6 +58,34 @@ enum KijijiClothingCategory {
   WomensTopsAndOuterwear = "Women's - Tops & Outerwear",
   Other = "Other",
   WomensOther = "Women's - Other",
+}
+
+export enum ShopifyCategory {
+  ApparelAndAccessories = "Apparel & Accessories",
+  ArtsAndCrafts = "Arts & Crafts",
+  Automotive = "Automotive",
+  BabyAndKids = "Baby & Kids",
+  BeautyAndPersonalCare = "Beauty & Personal Care",
+  BooksAndStationery = "Books & Stationery",
+  ConsumerElectronics = "Consumer Electronics",
+  FoodAndBeverages = "Food & Beverages",
+  Furniture = "Furniture",
+  HealthAndWellness = "Health & Wellness",
+  HomeAndLiving = "Home & Living",
+  JewelryAndWatches = "Jewelry & Watches",
+  MusicalInstruments = "Musical Instruments",
+  OfficeSupplies = "Office Supplies",
+  PetSupplies = "Pet Supplies",
+  ShoesAndFootwear = "Shoes & Footwear",
+  SportingGoods = "Sporting Goods",
+  ToysAndGames = "Toys & Games",
+  TravelAndLuggage = "Travel & Luggage",
+  VideoGamesAndConsoles = "Video Games & Consoles",
+  Other = "Other",
+}
+
+export enum ShopifySubCategory {
+  SomeTestSubCategory = "Some Test SubCategory",
 }
 
 export enum CraigsListSaleCategory {

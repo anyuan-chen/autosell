@@ -17,10 +17,12 @@ export default defineSchema({
     rank: v.number(),
   }),
   listings: defineTable({
+    src: v.string(),
     title: v.string(),
     price: v.number(),
-    kijijiLink: v.string(),
-    craigslistLink: v.string(),
+    kijijiLink: v.optional(v.string()),
+    shopifyLink: v.optional(v.string()),
+    craigslistLink: v.optional(v.string()),
   }),
 
   leads: defineTable({

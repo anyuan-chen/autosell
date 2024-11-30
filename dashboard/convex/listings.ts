@@ -24,8 +24,9 @@ export const create = mutation({
   args: {
     title: v.string(),
     price: v.number(),
-    kijijiLink: v.string(),
-    craigslistLink: v.string(),
+    kijijiLink: v.optional(v.string()),
+    craigslistLink: v.optional(v.string()),
+    src: v.string()
   },
   handler: async (ctx, args) => {
     const listingId = await ctx.db.insert("listings", {
@@ -33,6 +34,7 @@ export const create = mutation({
       price: args.price,
       kijijiLink: args.kijijiLink,
       craigslistLink: args.craigslistLink,
+      src: args.src
     });
     return listingId;
   },

@@ -23,10 +23,12 @@ export const getAll = query({
 export const create = mutation({
   args: {
     title: v.string(),
+    description: v.string(),
     price: v.number(),
+    src: v.string(),
     kijijiLink: v.optional(v.string()),
     craigslistLink: v.optional(v.string()),
-    src: v.string()
+    shopifyLink: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const listingId = await ctx.db.insert("listings", {
@@ -34,7 +36,8 @@ export const create = mutation({
       price: args.price,
       kijijiLink: args.kijijiLink,
       craigslistLink: args.craigslistLink,
-      src: args.src
+      shopifyLink: args.shopifyLink,
+      src: args.src,
     });
     return listingId;
   },

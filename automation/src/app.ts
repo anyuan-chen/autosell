@@ -4,6 +4,7 @@ import cors from "cors";
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
+import { responder } from "kijiji.js";
 
 dotenv.config({ path: ".env.local" });
 
@@ -14,7 +15,7 @@ export const kijijiStagehand = new Stagehand({
   env: "LOCAL",
 });
 const client = new ConvexHttpClient(process.env.CONVEX_URL || "");
-
+responder()
 
 const app = express();
 const port = process.env.PORT || 3001;

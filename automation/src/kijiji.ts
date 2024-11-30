@@ -16,7 +16,7 @@ const runKijijiLogin = async (stagehand: Stagehand) => {
   );
   await new Promise((resolve) => setTimeout(resolve, 1000));
   await stagehand.page.fill("#username", "andrew.chen.anyuan@gmail.com");
-  await stagehand.page.fill("#password", "FsQb9hftNd5UZPg!");
+  await stagehand.page.fill("#password", `${process.env.KIJIJI_PASSWORD}`);
   await stagehand.page.click("#login-submit");
   await new Promise((resolve) => setTimeout(resolve, 1000));
 };
@@ -130,7 +130,7 @@ const messageScanner = async () => {
   }
 };
 
-async function responder() {
+export async function responder() {
   await messageScanner();
   setTimeout(responder, 10000);
 }

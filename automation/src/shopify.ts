@@ -42,6 +42,10 @@ const createShopifyProduct = async (
   price: number,
 ) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
+  await shopifyStagehand.page.goto(`${process.env.SHOPIFY_STORE_ADD}`);
+
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
   const titleBox = shopifyStagehand.page.locator(
     '[placeholder="Short sleeve t-shirt"]',
   );

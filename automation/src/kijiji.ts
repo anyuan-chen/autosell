@@ -77,10 +77,10 @@ export const createKijijiAd = async (
   await kijijiStagehand.page.goto(
     "https://www.kijiji.ca/p-select-category.html",
   );
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(resolve, 10000));
   await kijijiStagehand.page.fill("#AdTitleForm", title);
   await kijijiStagehand.page.getByText("Next").click();
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  await new Promise((resolve) => setTimeout(resolve, 3000));
   const buyAndSell = await kijijiStagehand.page.getByText("Buy & Sell");
 
   let buyAndSellButton;
@@ -148,6 +148,9 @@ export const respondToKijiji = async () => {
     throw new Error("Could not extract adId from URL");
   }
   const adId = adIdMatch[1];
+
+  console.log("adId is: ", adId);
+
   const listing = await prisma.listing.findFirst({
     where: {
       kijijiLink: {
@@ -316,12 +319,12 @@ export const respondToKijiji = async () => {
 };
 
 export const MessageScanner = async () => {
-  const currentUrl = await kijijiResponseStagehand.page.url();
+  const currentUrl = kijijiResponseStagehand.page.url();
   if (currentUrl !== "https://www.kijiji.ca/m-msg-my-messages/") {
     await kijijiResponseStagehand.page.goto(
       "https://www.kijiji.ca/m-msg-my-messages/",
     );
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
   }
   const listParent = await kijijiResponseStagehand.page.locator(
     `[data-testid="conversation-list"]`,
@@ -382,7 +385,17 @@ export const postKijijiAd = async (
   );
 };
 
-export async function responder() {
-  await respondToKijiji();
-  setTimeout(responder, 1000);
-}
+export const responder = async () => {
+  await runKijijiLogin(kijijiResponseStagehand);
+
+  while (true) {
+    try {
+      await kijijiResponseStagehand.page.reload();
+      await MessageScanner();
+      await new Promise((resolve) => setTimeout(resolve, 10000));
+    } catch (error) {
+      console.error("Error during message scan:", error);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
+};

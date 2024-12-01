@@ -70,8 +70,8 @@ const postToShopify = async (src: string) => {
 
   const listing = await client.query(api.listings.get, { src });
 
-  console.log("listing: ", listing)
-  
+  console.log("listing: ", listing);
+
   if (!listing) {
     throw new Error("Listing not found");
   }

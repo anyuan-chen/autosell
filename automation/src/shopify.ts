@@ -1,66 +1,19 @@
 import "dotenv/config";
-import { z } from "zod";
-import {
-  ShopifyCategory,
-  ShopifyClothingCategory,
-  ShopifyElectronicsCategory,
-  ShopifyMusicalInstrumentCategory,
-} from "types";
-import { kijijiStagehand, shopifyStagehand } from "app";
-import { generateObject, generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { shopifyStagehand } from "app";
 
-export type ShopifySubCategory =
-  | ShopifyElectronicsCategory
-  | ShopifyMusicalInstrumentCategory
-  | ShopifyClothingCategory;
 
-const generateShopifyInfo = async (src: string) => {
-  const productInfo = await generateText({
-    model: openai("gpt-4o"),
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "image", image: `${src}` },
-          {
-            type: "text",
-            text: "Analyze this product image and tell me what is the exact product model name of this item? Be detailed.",
-          },
-        ],
-      },
-    ],
-  });
-  console.log(productInfo.text);
-  const response = await generateObject({
-    model: openai("gpt-4o"),
-    prompt: `Here is some information about a product: ${productInfo.text}. Based on this information, generate a Shopify listing with the following fields:
-      - title: A clear, descriptive title under 40 characters
-      - description: A detailed product description
-      - price: A reasonable price in CAD
-      - category: One of the following Shopify categories: ${Object.values(ShopifyCategory).join(", ")}
-      - subcategory: If applicable, a relevant subcategory`,
-    schema: z.object({
-      category: z.nativeEnum(ShopifyCategory),
-      subcategory: z.nativeEnum(ShopifyClothingCategory).optional(),
-    }),
-  });
-
-  return response;
-};
-
-const runShopifyLogin = async () => {
+export const runShopifyLogin = async () => {
   await shopifyStagehand.init({
     domSettleTimeoutMs: 40000,
     modelName: "gpt-4o",
   });
   await shopifyStagehand.page.goto(
-    "https://admin.shopify.com/store/1yzxxw-m0/products/new",
+    "https://admin.shopify.com/store/p310pm-c4/products/new",
   );
   await new Promise((resolve) => setTimeout(resolve, 1000));
   await shopifyStagehand.page.fill(
     "#account_email",
-    "whcpeterwangca@gmail.com",
+    `${process.env.SHOPIFY_EMAIL}`,
   );
   await shopifyStagehand.act({
     action: "Click on the continue with email button",
@@ -80,55 +33,51 @@ const createShopifyProduct = async (
   title: string,
   description: string,
   price: number,
-  category: ShopifyCategory,
-  subcategory: ShopifySubCategory,
 ) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  runShopifyLogin();
-
-  const titleBox = kijijiStagehand.page.locator(
+  const titleBox = shopifyStagehand.page.locator(
     '[placeholder="Short sleeve t-shirt"]',
   );
   await titleBox.fill(title);
 
-  await kijijiStagehand.page.evaluate(() => {
+  await shopifyStagehand.page.evaluate(() => {
     const textarea = document.querySelector("#product-description");
     if (textarea) {
       textarea.removeAttribute("style");
       textarea.setAttribute("style", "display: block;");
     }
   });
-  await kijijiStagehand.page.fill("#product-description", description);
+  await shopifyStagehand.page.fill("#product-description", description);
 
-  const priceBox = kijijiStagehand.page.locator('[name="price"]');
+  const priceBox = shopifyStagehand.page.locator('[name="price"]');
   await priceBox.fill(price.toString());
 
-  await kijijiStagehand.act({
+  await shopifyStagehand.act({
     action: "click on the select existing button",
   });
 
   await new Promise((resolve) => setTimeout(resolve, 3000));
 
-  const addFromUrlBox = kijijiStagehand.page.locator(
+  const addFromUrlBox = shopifyStagehand.page.locator(
     '[aria-label="Add from URL"]',
   );
   addFromUrlBox.click();
 
-  const urlBox = kijijiStagehand.page.locator('[placeholder="https://"]');
+  const urlBox = shopifyStagehand.page.locator('[placeholder="https://"]');
   await urlBox.fill(image.toString());
 
-  await kijijiStagehand.act({
+  await shopifyStagehand.act({
     action: "click on the add file button",
   });
 
-  await kijijiStagehand.act({
+  await shopifyStagehand.act({
     action: "click on the done button",
   });
 
-  const submitButton = kijijiStagehand.page.locator('[aria-label="Save"]');
+  const submitButton = shopifyStagehand.page.locator('[aria-label="Save"]');
   await submitButton.click();
 
-  return kijijiStagehand.page.url();
+  return shopifyStagehand.page.url();
 };
 
 export const postShopifyAd = async (
@@ -137,16 +86,10 @@ export const postShopifyAd = async (
   description: string,
   price: number,
 ) => {
-  const shopifyInfo = await generateShopifyInfo(src);
-  const category = shopifyInfo.object.category;
-  const subcategory = shopifyInfo.object.subcategory;
-
-  createShopifyProduct(
+  return await createShopifyProduct(
     src,
     title,
     description,
     price,
-    category,
-    subcategory as ShopifySubCategory,
   );
 };

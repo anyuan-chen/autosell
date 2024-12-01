@@ -73,6 +73,7 @@ export const postCraigsListAd = async (
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     await stagehand.page.click('form[id="publish_top"] > button')
+    
     await stagehand.page.close()
 }
   

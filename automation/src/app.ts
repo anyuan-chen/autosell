@@ -4,9 +4,9 @@ import cors from "cors";
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
-import { postKijijiAd, responder, runKijijiLogin } from "kijiji.js";
-import { postShopifyAd } from "shopify.js";
-import { postCraigsListAd } from "craiglist.js";
+import { postKijijiAd, runKijijiLogin } from "kijiji.js";
+import { postShopifyAd, runShopifyLogin } from "shopify.js";
+import { postCraigsListAd, runCraigsListLogin } from "craiglist.js";
 
 dotenv.config({ path: ".env.local" });
 
@@ -39,7 +39,9 @@ app.use(express.json());
 
 
 const postToKijiji = async (src: string) => {
-  const listing = await client.query(api.listings.get, { src });
+  console.log("before listing")
+  const listing = await client.query(api.listings.get, { src: src });
+  console.log("listing", listing)
   if (!listing) {
     throw new Error("Listing not found");
   }
@@ -117,13 +119,16 @@ const postToCraigslist = async (src: string) => {
 
 // @ts-ignore
 app.post("/post-kijiji", async (req: Request, res: Response) => {
-  const { src } = req.query;
+  const { src } = req.body;
+  console.log(src)
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
 
   try {
+    console.log("here")
     const url = await postToKijiji(src);
+    console.log("there")
     res.send({ url });
   } catch (error) {
     res.status(500).json({ error: error });
@@ -132,7 +137,7 @@ app.post("/post-kijiji", async (req: Request, res: Response) => {
 
 // @ts-ignore
 app.post("/post-shopify", async (req: Request, res: Response) => {
-  const { src } = req.query;
+  const { src } = req.body;
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
@@ -147,7 +152,7 @@ app.post("/post-shopify", async (req: Request, res: Response) => {
 
 // @ts-ignore
 app.post("/post-craigslist", async (req: Request, res: Response) => {
-  const { src } = req.query;
+  const { src } = req.body;
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
@@ -162,11 +167,11 @@ app.post("/post-craigslist", async (req: Request, res: Response) => {
 
 // @ts-ignore
 app.post("/post", async (req: Request, res: Response) => {
-  const { src } = req.query;
+  const { src } = req.body;
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
-
+  console.log("what is going on")
   try {
     const [kijijiUrl, shopifyUrl, craigslistUrl] = await Promise.all([
       postToKijiji(src),
@@ -180,10 +185,13 @@ app.post("/post", async (req: Request, res: Response) => {
       craigslistUrl
     });
   } catch (error) {
-    res.status(500).json({ error: error });
+    res.status(500).json({ error: JSON.stringify(error) });
   }
 });
 
 app.listen(port, async () => {
+  runShopifyLogin();
+  runCraigsListLogin(craigslistStagehand)
+  runKijijiLogin(kijijiStagehand)
   console.log(`Server listening on port ${port}`);
 });

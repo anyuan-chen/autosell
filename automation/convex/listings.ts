@@ -23,18 +23,12 @@ export const getAll = query({
 export const get = query({
   args: { src: v.string() },
   handler: async (ctx, args) => {
+    console.log(args)
     const listing = await ctx.db
       .query("listings")
-      .filter((q) => q.eq(q.field("src"), args.src))
-      .first();
-    if (!listing) return null;
-
-    const leads = await ctx.db
-      .query("leads")
-      .filter((q) => q.eq(q.field("listingId"), listing._id))
-      .collect();
-
-    return { ...listing, leads };
+      .filter((q) => q.eq(q.field("src"), args.src)).first()
+    console.log("after listing")
+    return listing;
   },
 });
 

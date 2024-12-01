@@ -199,7 +199,7 @@ export const postKijijiAd = async (
   const category = kijijiInfo.object.category;
   const subcategory = kijijiInfo.object.subcategory;
 
-  createKijijiAd(
+  return await createKijijiAd(
     src,
     title,
     description,

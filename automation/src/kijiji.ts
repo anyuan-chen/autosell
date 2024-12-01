@@ -12,6 +12,7 @@ import {
 } from "types";
 import { generateObject, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { text } from "express";
 
 export type KijijiSubcategory =
   | KijijiClothingCategory
@@ -152,6 +153,7 @@ export const respondToKijiji = async () => {
   );
   const incoming: string[] = [];
   const outgoing: string[] = [];
+  const allMessages: [string, boolean][] = [];
 
   const messageBox = kijijiResponseStagehand.page.locator(
     '[data-testid="MessageList"]',
@@ -166,19 +168,29 @@ export const respondToKijiji = async () => {
     const nthChild = childrenDivs.nth(i);
     const innerDivs = nthChild.locator("div");
 
-    // Count the inner divs
-    const innerDivCount = await innerDivs.count();
+    const innerDiv = innerDivs.nth(1);
+    const textContent = await innerDiv.textContent();
 
-    // Log the inner divs
-    for (let j = 0; j < innerDivCount; j++) {
-      const innerDiv = innerDivs.nth(j);
-      const textContent = await innerDiv.textContent();
-      console.log(`Div ${i}, Inner Div ${j}: ${textContent}`);
+    if (!textContent) {
+      continue;
     }
+
+    const direction = await nthChild.getAttribute("data-qa-message-direction");
+    console.log(
+      `${i}th message is: ${textContent} and the direction is ${direction}`,
+    );
+    if (direction == "INBOUND") {
+      incoming.push(textContent);
+    } else {
+      outgoing.push(textContent);
+    }
+
+    allMessages.push([textContent, direction == "INBOUND" ? true : false]);
   }
 
   console.log("Incoming messages:", incoming);
   console.log("Outgoing messages:", outgoing);
+  console.log("All messages:", allMessages);
 };
 
 export const MessageScanner = async () => {

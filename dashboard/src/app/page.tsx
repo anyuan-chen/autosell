@@ -19,7 +19,6 @@ import { Progress } from "@/components/ui/progress";
 import { useR2Url } from "@/hooks/use-r2-url";
 
 export default function ListingsPage() {
-  const createListing = useMutation(api.listings.create);
   const { uploadFile, isUploading, progress } = useUpload();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
@@ -79,26 +78,60 @@ export default function ListingsPage() {
 
         const listing = generateData.listing;
         console.log("listing", listing);
-        await createListing({
-          src: fileUrl,
-          title: listing.title,
-          description: listing.description,
-          price: listing.price,
-        });
-
-        const res = await fetch("http://localhost:3001/post-kijiji", {
+        const createListingResponse = await fetch("/api/listings", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
           },
           body: JSON.stringify({
-            src: fileUrl,
+            newListing: {
+              src: fileUrl,
+              title: listing.title,
+              description: listing.description,
+              price: listing.price,
+            },
           }),
-          mode: "cors",
         });
-        const res2 = await res.json();
-        console.log("result", res2);
+        const createListingData = await createListingResponse.json();
+        if (!createListingData.success) {
+          throw new Error(createListingData.error);
+        }
+        console.log("i got here!");
+        const [kijijiRes, shopifyRes, craigslistRes] = await Promise.all([
+          fetch("http://localhost:3001/post-kijiji", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify({
+              src: fileUrl,
+            }),
+            mode: "cors",
+          }),
+          fetch("http://localhost:3001/post-shopify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify({
+              src: fileUrl,
+            }),
+            mode: "cors",
+          }),
+          fetch("http://localhost:3001/post-craigslist", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+            body: JSON.stringify({
+              src: fileUrl,
+            }),
+            mode: "cors",
+          }),
+        ]);
 
         setOpen(false);
         setProcessing(false);

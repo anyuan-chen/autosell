@@ -1,9 +1,22 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Listing } from "./Listing";
 
 export function ListingsContainer() {
-  const listings = useQuery(api.listings.getAll);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [listings, setListings] = useState<any[]>();
+
+  useEffect(() => {
+    const fetchListings = async () => {
+      const response = await fetch("/api/listings");
+      const data = await response.json();
+      if (data.success) {
+        setListings(data.listingWithLeads);
+      }
+    };
+    fetchListings();
+  }, []);
 
   return (
     <>

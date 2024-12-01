@@ -179,6 +179,12 @@ export const respondToKijiji = async () => {
   // // console.log("Price: ", listingPrice);
   // // console.log("minPrice: ", minPrice);
 
+  const headerWithAvatar = kijijiResponseStagehand.page.locator(
+    'div[class*="headerWithAvatar"]',
+  );
+  const avatarLink = headerWithAvatar.locator('a[class*="avatarLink"]');
+  const avatarHref = await avatarLink.getAttribute("href");
+
   const messageBox = kijijiResponseStagehand.page.locator(
     '[data-testid="MessageList"]',
   );

@@ -5,26 +5,36 @@ import { shopifyStagehand } from "app";
 export const runShopifyLogin = async () => {
   await shopifyStagehand.init({
     domSettleTimeoutMs: 40000,
-    modelName: "gpt-4o",
   });
+  
   await shopifyStagehand.page.goto(
-    "https://admin.shopify.com/store/p310pm-c4/products/new",
+  `${process.env.SHOPIFY_STORE_LINK}`,
   );
+
   await new Promise((resolve) => setTimeout(resolve, 1000));
+
   await shopifyStagehand.page.fill(
     "#account_email",
     `${process.env.SHOPIFY_EMAIL}`,
   );
-  await shopifyStagehand.act({
-    action: "Click on the continue with email button",
-  });
+
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
+  await shopifyStagehand.page.click('button[name="commit"]')
+
+  console.log("clicking log in with email button")
+
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
   await shopifyStagehand.page.fill(
     "#account_password",
     `${process.env.SHOPIFY_PASSWORD}`,
   );
-  await shopifyStagehand.act({
-    action: "click on the log in button",
-  });
+
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
+  await shopifyStagehand.page.click('button[name="commit"]')
+
   await new Promise((resolve) => setTimeout(resolve, 1000));
 };
 

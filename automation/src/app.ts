@@ -7,6 +7,11 @@ import { api } from "../convex/_generated/api.js";
 import { postKijijiAd, runKijijiLogin } from "kijiji.js";
 import { postShopifyAd, runShopifyLogin } from "shopify.js";
 import { postCraigsListAd, runCraigsListLogin } from "craiglist.js";
+import { z } from "zod";
+import { CraigsListSaleCategory } from "types.js";
+import { openai } from "@ai-sdk/openai";
+import { generateObject, generateText } from "ai";
+
 
 dotenv.config({ path: ".env.local" });
 
@@ -23,7 +28,7 @@ export const shopifyStagehand = new Stagehand({
   env: "LOCAL",
 });
 
-const client = new ConvexHttpClient(process.env.CONVEX_URL || "");
+export const client = new ConvexHttpClient(process.env.CONVEX_URL || "");
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -99,11 +104,18 @@ const postToCraigslist = async (src: string) => {
   }
 
   try {
+    const craigslistInfo = await generateObject({
+      model: openai("gpt-4o"),
+      prompt: `Here is some information about a product: ${listing.title} - ${listing.description}. Based on this information, generate a Craigslist listing with the following fields:
+      - category: The appropriate Craigslist sale category`,
+      schema: z.object({
+        category: z.nativeEnum(CraigsListSaleCategory),
+      }),
+    });
     await postCraigsListAd(
       src,
-      listing.title,
-      listing.description,
-      listing.price,
+      craigslistStagehand,
+      craigslistInfo.object.category,
     );
   } catch (error) {
     console.error("Error posting Craigslist ad:", error);

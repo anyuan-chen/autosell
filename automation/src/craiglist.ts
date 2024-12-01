@@ -2,6 +2,8 @@ import { Stagehand } from "@browserbasehq/stagehand";
 import * as path from "path"
 import fs from 'fs'
 import { CraigsListSaleCategory, CraigsListPostDetails } from "types";
+import { client } from "app";
+import { api } from "../convex/_generated/api";
 
 export const runCraigsListLogin  = async (stagehand: Stagehand) => {
     await stagehand.init({ domSettleTimeoutMs: 40000 });
@@ -23,8 +25,17 @@ export const postCraigsListAd = async (
     src: string,
     stagehand: Stagehand,
     category: CraigsListSaleCategory,
-    postDetails: CraigsListPostDetails
 ) => {
+    const listing = await client.query(api.listings.get, { src });
+    if (!listing) {
+        throw new Error("Listing not found");
+    }
+
+    const postDetails: CraigsListPostDetails = {
+        postingTitle: listing.title,
+        description: listing.description,
+        price: listing.price
+    };
 
     await stagehand.page.waitForSelector('form[class="new_posting_thing"] > button')
 
@@ -73,7 +84,9 @@ export const postCraigsListAd = async (
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     await stagehand.page.click('form[id="publish_top"] > button')
-    
-    await stagehand.page.close()
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    await stagehand.act({action: "click on the link that goes to the posting we just made. should be the second line"})
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 }
   

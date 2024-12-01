@@ -6,6 +6,7 @@ export const upsert = mutation({
   args: {
     kijijiLink: v.string(),
     name: v.string(),
+    messageLogs: v.string(),
     status: v.union(
       v.literal("Preliminary"),
       v.literal("Price Negotiation"),
@@ -50,6 +51,7 @@ export const upsert = mutation({
       listingId: listing._id,
       name: args.name,
       status: args.status,
+      messageLogs: args.messageLogs,
     });
     return leadId;
   },
@@ -60,9 +62,10 @@ export default {
     listingId: v.id("listings"),
     name: v.string(),
     status: v.union(
-      v.literal("inquiry"),
-      v.literal("negotiation"),
-      v.literal("closing"),
+      v.literal("Preliminary"),
+      v.literal("Price Negotiation"),
+      v.literal("Deal"),
+      v.literal("Meetup"),
     ),
   }),
 };

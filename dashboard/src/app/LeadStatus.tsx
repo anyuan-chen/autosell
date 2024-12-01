@@ -14,7 +14,7 @@ export function LeadStatus({ lead }: { lead: Lead }) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: lead.messageLogs,
+          body: JSON.stringify({ messages: lead.messageLogs }),
         });
 
         const data = await response.json();
@@ -38,6 +38,6 @@ export function LeadStatus({ lead }: { lead: Lead }) {
   }
 
   return (
-    <div className="text-sm text-gray-700">{summary || "No messages yet"}</div>
+    <div className="text-xs text-gray-700">{summary || "No messages yet"}</div>
   );
 }

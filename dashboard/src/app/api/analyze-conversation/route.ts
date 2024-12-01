@@ -16,7 +16,7 @@ Example summaries:
 - "Initial inquiry about product availability"
 
 Conversation:
-${messages.map((msg: any) => `${msg.role}: ${msg.text}`).join("\n")}
+${JSON.stringify(messages)}
 
 Remember to respond with only ONE sentence.`;
 

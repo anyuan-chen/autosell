@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import * as dotenv from "dotenv";
 
-import { postKijijiAd, runKijijiLogin } from "kijiji.js";
+import { postKijijiAd, responder, runKijijiLogin } from "kijiji.js";
 import { postShopifyAd, runShopifyLogin } from "shopify.js";
 import { postCraigsListAd, runCraigsListLogin } from "craiglist.js";
 import { z } from "zod";
@@ -15,7 +15,6 @@ import { PrismaClient } from "@prisma/client";
 
 dotenv.config({ path: ".env.local" });
 
-console.log("top")
 export const kijijiResponseStagehand = new Stagehand({
   env: "LOCAL",
 });
@@ -29,10 +28,9 @@ export const shopifyStagehand = new Stagehand({
   env: "LOCAL",
 });
 
-export const prisma = new PrismaClient();
-console.log("after prisma ")
 const app = express();
 const port = process.env.PORT || 3001;
+export const prisma = new PrismaClient();
 
 app.use(
   cors({
@@ -195,6 +193,7 @@ app.post("/post", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
   console.log("what is going on");
+
   try {
     const [kijijiUrl, shopifyUrl, craigslistUrl] = await Promise.all([
       postToKijiji(src),
@@ -216,5 +215,6 @@ app.listen(port, async () => {
   runShopifyLogin();
   runCraigsListLogin(craigslistStagehand);
   runKijijiLogin(kijijiStagehand);
+  responder();
   console.log(`Server listening on port ${port}`);
 });

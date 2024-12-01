@@ -21,7 +21,9 @@ export async function POST(request: Request) {
       ContentType: contentType,
     });
 
-    const signedUrl = await getSignedUrl(R2, command, { expiresIn });
+    const signedUrl = await getSignedUrl(R2, command, {
+      expiresIn,
+    });
 
     return Response.json({
       success: true,

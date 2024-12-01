@@ -80,7 +80,7 @@ export default function ListingsPage() {
         }
 
         const listing = generateData.listing;
-
+        console.log("listing", listing);
         await createListing({
           src: fileUrl,
           title: listing.title,
@@ -88,20 +88,19 @@ export default function ListingsPage() {
           price: listing.price,
         });
 
-        await fetch("http://localhost:3001/post", {
+        const res = await fetch("http://localhost:3001/post-kijiji", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
           },
           body: JSON.stringify({
-            title: listing.title,
-            description: listing.description,
-            price: listing.price,
-            imageUrl: fileUrl,
+            src: fileUrl,
           }),
           mode: "cors",
         });
+        const res2 = await res.json();
+        console.log("result", res2);
 
         setOpen(false);
         setProcessing(false);

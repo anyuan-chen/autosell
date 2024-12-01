@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  listingId   Int
+  name        String
+  messageLogs String
+  status      String
+  Listing     Listing @relation(fields: [listingId], references: [id])
+
+  @@id([name, listingId])
+}
+
+model Listing {
+  id             Int     @id @default(autoincrement())
+  src            String
+  title          String
+  description    String
+  price          Float
+  kijijiLink     String?
+  shopifyLink    String?
+  craigslistLink String?
+  Lead           Lead[]
+}
+
+model Location {
+  id                 Int     @id @default(autoincrement())
+  name               String
+  long               Int
+  lat                Int
+  address            String
+  isPublicPlace      Boolean
+  hasPeopleAround    Boolean
+  hasSecurityCameras Boolean
+  reasoning          String
+  rank               Int
+}

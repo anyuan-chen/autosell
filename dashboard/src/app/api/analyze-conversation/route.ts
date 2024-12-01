@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 
@@ -15,7 +16,7 @@ Example summaries:
 - "Initial inquiry about product availability"
 
 Conversation:
-${messages.map((msg: any) => `${msg.role}: ${msg.text}`).join('\n')}
+${messages.map((msg: any) => `${msg.role}: ${msg.text}`).join("\n")}
 
 Remember to respond with only ONE sentence.`;
 
@@ -40,4 +41,4 @@ Remember to respond with only ONE sentence.`;
       { status: 500 }
     );
   }
-} 
+}

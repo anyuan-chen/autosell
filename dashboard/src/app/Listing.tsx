@@ -84,7 +84,6 @@ export function Listing({ listing }: ListingProps) {
                 >
                   <span>{lead.name}</span>
                   <LeadStatus lead={lead} />
-
                 </li>
               ))}
             </ul>

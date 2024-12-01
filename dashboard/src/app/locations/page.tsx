@@ -155,16 +155,8 @@ export default function LocationList() {
 
   const addLocation = async () => {
     if (newLocation && locations) {
-      const oldLocations = locations.map((location) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _id, _creationTime, ...rest } = location;
-        return { ...rest, rank: location.rank };
-      });
       await replaceAll({
-        locations: [
-          ...oldLocations,
-          { ...newLocation, rank: locations.length },
-        ],
+        locations: [...locations, { ...newLocation, rank: locations.length }],
       });
       setNewLocation(null);
       setIsDialogOpen(false);
@@ -288,11 +280,13 @@ export default function LocationList() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={locations.map((location) => ({ id: location._id }))}
+            items={locations.map((location: Location) => ({
+              id: location._id,
+            }))}
             strategy={verticalListSortingStrategy}
           >
             <ul className="space-y-2">
-              {locations.map((location) => (
+              {locations.map((location: Location) => (
                 <SortableLocation
                   key={location.name}
                   location={{

@@ -17,7 +17,7 @@ export function useUpload() {
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type,
-          expiresIn: 86400, // 24 hours in seconds
+          expiresIn: 86400,
         }),
       });
 

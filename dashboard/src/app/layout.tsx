@@ -3,7 +3,6 @@ import "./globals.css";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Inter } from "next/font/google";
-import { ConvexClientProvider } from "./ConvexClientProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,7 +27,7 @@ export default function RootLayout({
             <AppSidebar />
             <main className="w-full">
               <SidebarTrigger />
-              <ConvexClientProvider>{children}</ConvexClientProvider>
+              {children}
             </main>
           </SidebarProvider>
         </div>

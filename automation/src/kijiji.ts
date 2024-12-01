@@ -142,14 +142,11 @@ export const respondToKijiji = async () => {
     throw new Error("no link to the kijiji ad found on the page ff15");
   }
 
-  // Extract adId from the URL
   const adIdMatch = adLink.match(/adId=(\d+)/);
   if (!adIdMatch) {
     throw new Error("Could not extract adId from URL");
   }
   const adId = adIdMatch[1];
-
-  console.log("adId is: ", adId);
 
   const listing = await prisma.listing.findFirst({
     where: {
@@ -159,11 +156,13 @@ export const respondToKijiji = async () => {
     },
   });
 
+  console.log("Listing is: ", listing);
+
   if (!listing) {
     throw new Error("Listing not found");
   }
 
-  await kijijiResponseStagehand.page.goto(adLink);
+  // await kijijiResponseStagehand.page.goto(adLink);
 
   await new Promise((resolve) => setTimeout(resolve, 10000));
   const incoming: string[] = [];
@@ -194,7 +193,7 @@ export const respondToKijiji = async () => {
   const headerWithAvatar = kijijiResponseStagehand.page.locator(
     'div[class*="headerWithAvatar"]',
   );
-  const avatarLink = headerWithAvatar.locator('a[class*="avatarLink"]');
+  const avatarLink = headerWithAvatar.locator('a[class*="avatarLink"]').first();
   const avatarHref = await avatarLink.getAttribute("href");
 
   const messageBox = kijijiResponseStagehand.page.locator(
@@ -237,14 +236,26 @@ export const respondToKijiji = async () => {
       Here is the conversation up to this point in chronological order, where True means a message the buyer sent, and false means a message that we have already sent.
       This is some information about the product that you are selling ${JSON.stringify(listing)}.
 
-      After you guys agree on a price, suggest places to meetup for the sale. There is a high preference on locations in ${locations}. 
+      After you guys agree on a price, suggest places to meetup for the sale. There is a high preference on locations in ${JSON.stringify(locations)}. 
       This is the conversation ${allMessages}, please respond to the latest message.
     `;
-
   const response = await generateText({
     model: openai("gpt-4o"),
     prompt: NegotiationPrompt,
   });
+  console.log("Incoming messages:", incoming);
+  console.log("Outgoing messages:", outgoing);
+  console.log("All messages:", allMessages);
+  console.log(response.text);
+
+  await kijijiResponseStagehand.page.fill("#SendMessageForm", response.text);
+
+  const sendButton = kijijiResponseStagehand.page.locator(
+    '[data-testid="SendMessage"]',
+  );
+  await sendButton.click();
+  console.log("sent message");
+
   enum NegotiationStage {
     Preliminary = "Preliminary",
     PriceNegotiation = "Price Negotiation",
@@ -261,7 +272,10 @@ export const respondToKijiji = async () => {
 
   const name = await kijijiResponseStagehand.page
     .locator('a[class*="link"][href*="profile"]')
+    .first()
     .innerText();
+
+  console.log("aid: ", adId);
 
   const lead = await prisma.lead.upsert({
     where: {
@@ -270,7 +284,11 @@ export const respondToKijiji = async () => {
         listingId:
           (
             await prisma.listing.findFirst({
-              where: { kijijiLink: adLink },
+              where: {
+                kijijiLink: {
+                  contains: adId,
+                },
+              },
             })
           )?.id || 0,
       },
@@ -281,7 +299,11 @@ export const respondToKijiji = async () => {
           id:
             (
               await prisma.listing.findFirst({
-                where: { kijijiLink: adLink },
+                where: {
+                  kijijiLink: {
+                    contains: adId,
+                  },
+                },
               })
             )?.id || 0,
         },
@@ -297,25 +319,6 @@ export const respondToKijiji = async () => {
   });
 
   console.log(lead);
-
-  if (response.text) {
-    const result = await response.text;
-    console.log(result);
-  } else {
-    console.log("Unexpected response format:", response);
-  }
-
-  console.log("Incoming messages:", incoming);
-  console.log("Outgoing messages:", outgoing);
-  console.log("All messages:", allMessages);
-
-  const messages = response.text.split("\n");
-  await kijijiResponseStagehand.page.fill("#SendMessageForm", messages[0]);
-
-  const sendButton = kijijiResponseStagehand.page.locator(
-    '[data-testid="SendMessage"]',
-  );
-  await sendButton.click();
 };
 
 export const MessageScanner = async () => {

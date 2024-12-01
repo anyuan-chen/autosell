@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Listing } from "./Listing";
 
-export function ListingsContainer() {
+export function ListingsContainer({ refetch }: { refetch: number }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [listings, setListings] = useState<any[]>();
 
@@ -16,7 +16,7 @@ export function ListingsContainer() {
       }
     };
     fetchListings();
-  }, []);
+  }, [refetch]);
 
   return (
     <>

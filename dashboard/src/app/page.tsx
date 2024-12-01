@@ -22,6 +22,7 @@ export default function ListingsPage() {
   const { uploadFile, isUploading, progress } = useUpload();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
+  const [refetch, setRefetch] = useState(1);
   const [processing, setProcessing] = useState(true);
   const { getUrl } = useR2Url();
 
@@ -92,6 +93,7 @@ export default function ListingsPage() {
             },
           }),
         });
+        setRefetch((refetch) => refetch + 1);
         const createListingData = await createListingResponse.json();
         if (!createListingData.success) {
           throw new Error(createListingData.error);
@@ -223,7 +225,7 @@ export default function ListingsPage() {
           </DialogContent>
         </Dialog>
       </div>
-      <ListingsContainer />
+      <ListingsContainer refetch={refetch} />
     </div>
   );
 }

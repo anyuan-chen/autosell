@@ -1,9 +1,7 @@
 import { Stagehand } from "@browserbasehq/stagehand";
 import express, { Request, Response } from "express";
 import cors from "cors";
-import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
-import { api } from "../convex/_generated/api.js";
 
 import { postKijijiAd, runKijijiLogin } from "kijiji.js";
 import { postShopifyAd, runShopifyLogin } from "shopify.js";
@@ -12,6 +10,8 @@ import { z } from "zod";
 import { CraigsListSaleCategory } from "types.js";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
+import * as listingService from "./services/listings";
+import { PrismaClient } from "@prisma/client";
 
 dotenv.config({ path: ".env.local" });
 
@@ -28,10 +28,9 @@ export const shopifyStagehand = new Stagehand({
   env: "LOCAL",
 });
 
-export const client = new ConvexHttpClient(process.env.CONVEX_URL || "");
-
 const app = express();
 const port = process.env.PORT || 3001;
+export const prisma = new PrismaClient();
 
 app.use(
   cors({
@@ -44,7 +43,16 @@ app.use(express.json());
 
 const postToKijiji = async (src: string) => {
   console.log("before listing");
-  const listing = await client.query(api.listings.get, { src: src });
+  let listing;
+  try {
+    listing = await listingService.get(src);
+    if (!listing) {
+      throw new Error("No listing found for source: " + src);
+    }
+  } catch (error) {
+    console.error("Error fetching listing:", error);
+    throw new Error("Failed to fetch listing data: " + error);
+  }
   console.log("listing", listing);
   if (!listing) {
     throw new Error("Listing not found");
@@ -67,7 +75,7 @@ const postToKijiji = async (src: string) => {
 };
 
 const postToShopify = async (src: string) => {
-  const listing = await client.query(api.listings.get, { src });
+  const listing = await listingService.get(src);
   if (!listing) {
     throw new Error("Listing not found");
   }
@@ -81,7 +89,7 @@ const postToShopify = async (src: string) => {
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
   let url = await shopifyStagehand.page.url();
-  await client.mutation(api.listings.upsert, {
+  await listingService.upsert({
     src: src,
     shopifyLink: url,
   });
@@ -91,7 +99,7 @@ const postToShopify = async (src: string) => {
 };
 
 const postToCraigslist = async (src: string) => {
-  const listing = await client.query(api.listings.get, { src });
+  const listing = await listingService.get(src);
   if (!listing) {
     throw new Error("Listing not found");
   }
@@ -118,7 +126,7 @@ const postToCraigslist = async (src: string) => {
   await new Promise((resolve) => setTimeout(resolve, 2000));
   let url = await craigslistStagehand.page.url();
   console.log("Final URL:", url);
-  await client.mutation(api.listings.upsert, {
+  await listingService.upsert({
     src: src,
     craigslistLink: url,
   });
@@ -136,7 +144,7 @@ app.post("/post-kijiji", async (req: Request, res: Response) => {
   try {
     console.log("here");
     const url = await postToKijiji(src);
-    await client.mutation(api.listings.upsert, {
+    await listingService.upsert({
       src: src,
       kijijiLink: url,
     });

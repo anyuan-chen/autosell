@@ -4,7 +4,7 @@ import { z } from "zod";
 import fs from "fs";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Locator } from "playwright-core";
-import { client, kijijiResponseStagehand, kijijiStagehand } from "app";
+import { kijijiResponseStagehand, kijijiStagehand, prisma } from "app";
 import {
   KijijiCategory,
   KijijiClothingCategory,
@@ -58,7 +58,7 @@ export const runKijijiLogin = async (stagehand: Stagehand) => {
     "https://id.kijiji.ca/login?service=https%3A%2F%2Fid.kijiji.ca%2Foauth2.0%2FcallbackAuthorize%3Fclient_id%3Dkijiji_horizontal_web_gpmPihV3%26redirect_uri%3Dhttps%253A%252F%252Fwww.kijiji.ca%252Fapi%252Fauth%252Fcallback%252Fcis%26response_type%3Dcode%26client_name%3DCasOAuthClient&locale=en&state=SteMlbjWnFA0Q1E2yVPRw9Pv0KSwaCNECrjy6DGrq20&scope=openid+email+profile",
   );
   await new Promise((resolve) => setTimeout(resolve, 5000));
-  await stagehand.page.fill("#username", "p25wang@uwaterloo.ca");
+  await stagehand.page.fill("#username", `${process.env.KIJIJI_EMAIL}`);
   await stagehand.page.fill("#password", `${process.env.KIJIJI_PASSWORD}`);
   await stagehand.page.click("#login-submit");
   await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -143,8 +143,10 @@ export const respondToKijiji = async () => {
     throw new Error("no adLink found on the page");
   }
 
-  const listing = await client.query(api.listings.getByKijijiLink, {
-    kijijiLink: adLink,
+  const listing = await prisma.listing.findFirst({
+    where: {
+      kijijiLink: adLink,
+    },
   });
 
   if (!listing) {
@@ -218,7 +220,7 @@ export const respondToKijiji = async () => {
     allMessages.push([textContent, direction == "INBOUND" ? true : false]);
   }
 
-  const locations = await client.query(api.locations.getAll);
+  const locations = await prisma.location.findMany();
 
   const NegotiationPrompt = `
       You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. 
@@ -251,11 +253,32 @@ export const respondToKijiji = async () => {
     .locator('a[class*="link"][href*="profile"]')
     .innerText();
 
-  const lead = await client.mutation(api.leads.upsert, {
-    kijijiLink: adLink,
-    name: name,
-    status: status.object.stage,
-    messageLogs: JSON.stringify(allMessages),
+  const lead = await prisma.lead.upsert({
+    where: {
+      name_listingId: {
+        name: name,
+        listingId:
+          (
+            await prisma.listing.findFirst({
+              where: { kijijiLink: adLink },
+            })
+          )?.id || 0,
+      },
+    },
+    create: {
+      listing: {
+        connect: {
+          kijijiLink: adLink,
+        },
+      },
+      name: name,
+      status: status.object.stage,
+      messageLogs: JSON.stringify(allMessages),
+    },
+    update: {
+      status: status.object.stage,
+      messageLogs: JSON.stringify(allMessages),
+    },
   });
 
   console.log(lead);

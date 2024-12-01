@@ -18,16 +18,17 @@ export type KijijiSubcategory =
   | KijijiMusicalInstrumentCategory;
 
 const NegotiationPrompt = `
-  You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. I will pretend to negotiate with you and after every response, I want you to tell me what stage of the negotiation we are currently in out of the following categories! 
-  export enum NegotiationStage { 
-    Preliminary = "Preliminary", 
-    PriceNegotiation = "Price Negotiation", 
-    Deal = "Deal", 
-    Meetup = "Meetup", 
-  } 
-  Let's say you are selling airpods pro for 250 dollars. Make sure you don't go below 225 dollars. 
-  After you guys agree on a price, suggest places to meetup for the sale. 
-  Let the roleplay begin`;
+    You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. I will pretend to negotiate with you and after every response, I want you to tell me what stage of the negotiation we are currently in out of the following categories! 
+    export enum NegotiationStage { 
+      Preliminary = "Preliminary", 
+      PriceNegotiation = "Price Negotiation", 
+      Deal = "Deal", 
+      Meetup = "Meetup", 
+    } 
+    Let's say you are selling airpods pro for 250 dollars. Make sure you don't go below 225 dollars. 
+    After you guys agree on a price, suggest places to meetup for the sale. 
+    Let the roleplay begin
+  `;
 
 const generateKijijiInfo = async (src: string) => {
   const productInfo = await generateText({
@@ -147,7 +148,6 @@ export const createKijijiAd = async (
 const respondToKijiji = async () => {
   const url = await kijijiResponseStagehand.page.url();
   await new Promise((resolve) => setTimeout(resolve, 4000));
-  console.log(url);
 };
 
 const messageScanner = async () => {

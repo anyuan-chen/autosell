@@ -135,13 +135,17 @@ export const createKijijiAd = async (
 
 export const respondToKijiji = async () => {
   // Find the link by looking for elements with class containing 'adLink'
-  const adLink = await kijijiResponseStagehand.page.locator('a[class*="adLink"]').getAttribute('href');
+  const adLink = await kijijiResponseStagehand.page
+    .locator('a[class*="adLink"]')
+    .getAttribute("href");
 
-  if (!adLink){
-    throw new Error("no adLink found on the page")
+  if (!adLink) {
+    throw new Error("no adLink found on the page");
   }
-  
-  const listing = await client.query(api.listings.getByKijijiLink, { kijijiLink: adLink });
+
+  const listing = await client.query(api.listings.getByKijijiLink, {
+    kijijiLink: adLink,
+  });
 
   if (!listing) {
     throw new Error("Listing not found");
@@ -174,11 +178,6 @@ export const respondToKijiji = async () => {
   // console.log("Price Child: ", priceText);
   // // console.log("Price: ", listingPrice);
   // // console.log("minPrice: ", minPrice);
-
-  const headerWithAvatar = kijijiResponseStagehand.page.locator('div[class*="headerWithAvatar"]');
-  const avatarLink = headerWithAvatar.locator('a[class*="avatarLink"]');
-  const avatarHref = await avatarLink.getAttribute('href');
-
 
   const messageBox = kijijiResponseStagehand.page.locator(
     '[data-testid="MessageList"]',
@@ -228,25 +227,31 @@ export const respondToKijiji = async () => {
     model: openai("gpt-4o"),
     prompt: NegotiationPrompt,
   });
-  enum NegotiationStage { 
-    Preliminary = "Preliminary", 
-    PriceNegotiation = "Price Negotiation", 
-    Deal = "Deal", 
-    Meetup = "Meetup", 
-  } 
+  enum NegotiationStage {
+    Preliminary = "Preliminary",
+    PriceNegotiation = "Price Negotiation",
+    Deal = "Deal",
+    Meetup = "Meetup",
+  }
   const status = await generateObject({
     model: openai("gpt-4o"),
     prompt: `Based on the conversation ${allMessages}, which stage is this negotiation in?`,
     schema: z.object({
-      stage: z.nativeEnum(NegotiationStage)
-    })
-  })
-   
+      stage: z.nativeEnum(NegotiationStage),
+    }),
+  });
+
+  const name = await kijijiResponseStagehand.page
+    .locator('a[class*="link"][href*="profile"]')
+    .innerText();
+
   const lead = await client.mutation(api.leads.upsert, {
     kijijiLink: adLink,
-    name: incoming[0], // First message from buyer usually contains their name
-    status: status.object.stage
-  })
+    name: name,
+    status: status.object.stage,
+  });
+
+  console.log(lead);
 
   if (response.text) {
     const result = await response.text;

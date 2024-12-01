@@ -14,7 +14,16 @@ export const upsert = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const listing = await ctx.db.query("listings").first();
+    const listing = await ctx.db
+      .query("listings")
+      .filter((q) => {
+        const listingAdId = new URL(
+          String(q.field("kijijiLink")),
+        ).searchParams.get("ad_id");
+        const leadAdId = new URL(args.kijijiLink).searchParams.get("ad_id");
+        return q.eq(listingAdId, leadAdId);
+      })
+      .first();
 
     if (!listing) {
       throw new Error("Listing not found");

@@ -58,10 +58,7 @@ const runShopifyLogin = async () => {
     "https://admin.shopify.com/store/1yzxxw-m0/products/new",
   );
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  await shopifyStagehand.page.fill(
-    "#account_email",
-    "whcpeterwangca@gmail.com",
-  );
+  await shopifyStagehand.page.fill("#account_email", "p25wang@uwaterloo.ca");
   await shopifyStagehand.act({
     action: "Click on the continue with email button",
   });

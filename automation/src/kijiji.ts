@@ -70,7 +70,7 @@ export const runKijijiLogin = async (stagehand: Stagehand) => {
     "https://id.kijiji.ca/login?service=https%3A%2F%2Fid.kijiji.ca%2Foauth2.0%2FcallbackAuthorize%3Fclient_id%3Dkijiji_horizontal_web_gpmPihV3%26redirect_uri%3Dhttps%253A%252F%252Fwww.kijiji.ca%252Fapi%252Fauth%252Fcallback%252Fcis%26response_type%3Dcode%26client_name%3DCasOAuthClient&locale=en&state=SteMlbjWnFA0Q1E2yVPRw9Pv0KSwaCNECrjy6DGrq20&scope=openid+email+profile",
   );
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  await stagehand.page.fill("#username", "andrew.chen.anyuan@gmail.com");
+  await stagehand.page.fill("#username", "p25wang@uwaterloo.ca");
   await stagehand.page.fill("#password", `${process.env.KIJIJI_PASSWORD}`);
   await stagehand.page.click("#login-submit");
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -145,12 +145,43 @@ export const createKijijiAd = async (
   }
 };
 
-const respondToKijiji = async () => {
-  const url = await kijijiResponseStagehand.page.url();
+export const respondToKijiji = async () => {
   await new Promise((resolve) => setTimeout(resolve, 4000));
+  await kijijiResponseStagehand.page.goto(
+    "https://www.kijiji.ca/m-msg-my-messages/conversation/dphl:4j46msr:2m77f78qr",
+  );
+  const incoming: string[] = [];
+  const outgoing: string[] = [];
+
+  const messageBox = kijijiResponseStagehand.page.locator(
+    '[data-testid="MessageList"]',
+  );
+
+  const childrenDivs = messageBox.locator("div[data-qa-message-direction]");
+  const messageCount = await childrenDivs.count();
+  console.log("count is: ", messageCount);
+
+  for (let i = 0; i < messageCount; i++) {
+    console.log("was here ", i);
+    const nthChild = childrenDivs.nth(i);
+    const innerDivs = nthChild.locator("div");
+
+    // Count the inner divs
+    const innerDivCount = await innerDivs.count();
+
+    // Log the inner divs
+    for (let j = 0; j < innerDivCount; j++) {
+      const innerDiv = innerDivs.nth(j);
+      const textContent = await innerDiv.textContent();
+      console.log(`Div ${i}, Inner Div ${j}: ${textContent}`);
+    }
+  }
+
+  console.log("Incoming messages:", incoming);
+  console.log("Outgoing messages:", outgoing);
 };
 
-const messageScanner = async () => {
+export const MessageScanner = async () => {
   const currentUrl = await kijijiResponseStagehand.page.url();
   if (currentUrl !== "https://www.kijiji.ca/m-msg-my-messages/") {
     await kijijiResponseStagehand.page.goto(
@@ -218,6 +249,6 @@ export const postKijijiAd = async (
 };
 
 export async function responder() {
-  await messageScanner();
+  // await respondToKijiji();
   setTimeout(responder, 1000);
 }

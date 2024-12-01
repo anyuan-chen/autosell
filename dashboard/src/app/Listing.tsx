@@ -5,10 +5,11 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { LeadStatus } from "./LeadStatus";
 import Image from "next/image";
 
-interface Lead {
+export interface Lead {
   _id: string;
   name: string;
   status: "Preliminary" | "Price Negotiation" | "Deal" | "Meetup";
+  messageLogs: string;
 }
 
 interface ListingProps {

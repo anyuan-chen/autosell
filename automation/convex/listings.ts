@@ -32,6 +32,17 @@ export const get = query({
   },
 });
 
+export const getByKijijiLink = query({
+  args: { kijijiLink: v.string() },
+  handler: async (ctx, args) => {
+    const listing = await ctx.db
+      .query("listings")
+      .filter((q) => q.eq(q.field("kijijiLink"), args.kijijiLink))
+      .first();
+    return listing;
+  },
+});
+
 
 export const upsert = mutation({
   args: {

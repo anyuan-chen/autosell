@@ -4,7 +4,7 @@ import { z } from "zod";
 import fs from "fs";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Locator } from "playwright-core";
-import { kijijiResponseStagehand, kijijiStagehand } from "app";
+import { client, kijijiResponseStagehand, kijijiStagehand } from "app";
 import {
   KijijiCategory,
   KijijiClothingCategory,
@@ -12,6 +12,7 @@ import {
 } from "types";
 import { generateObject, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { api } from "../convex/_generated/api";
 
 export type KijijiSubcategory =
   | KijijiClothingCategory
@@ -133,9 +134,21 @@ export const createKijijiAd = async (
 };
 
 export const respondToKijiji = async () => {
-  await kijijiResponseStagehand.page.goto(
-    "https://www.kijiji.ca/m-msg-my-messages/conversation/dphl:4j46msr:2m77f78qr",
-  );
+  // Find the link by looking for elements with class containing 'adLink'
+  const adLink = await kijijiResponseStagehand.page.locator('a[class*="adLink"]').getAttribute('href');
+
+  if (!adLink){
+    throw new Error("no adLink found on the page")
+  }
+  
+  const listing = await client.query(api.listings.getByKijijiLink, { kijijiLink: adLink });
+
+  if (!listing) {
+    throw new Error("Listing not found");
+  }
+
+  await kijijiResponseStagehand.page.goto(adLink);
+
   await new Promise((resolve) => setTimeout(resolve, 10000));
   const incoming: string[] = [];
   const outgoing: string[] = [];
@@ -161,6 +174,11 @@ export const respondToKijiji = async () => {
   // console.log("Price Child: ", priceText);
   // // console.log("Price: ", listingPrice);
   // // console.log("minPrice: ", minPrice);
+
+  const headerWithAvatar = kijijiResponseStagehand.page.locator('div[class*="headerWithAvatar"]');
+  const avatarLink = headerWithAvatar.locator('a[class*="avatarLink"]');
+  const avatarHref = await avatarLink.getAttribute('href');
+
 
   const messageBox = kijijiResponseStagehand.page.locator(
     '[data-testid="MessageList"]',
@@ -195,18 +213,14 @@ export const respondToKijiji = async () => {
     allMessages.push([textContent, direction == "INBOUND" ? true : false]);
   }
 
+  const locations = await client.query(api.locations.getAll);
+
   const NegotiationPrompt = `
       You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. 
       After every response, I want you to tell me what stage of the negotiation we are currently in out of the following categories! 
-      export enum NegotiationStage { 
-        Preliminary = "Preliminary", 
-        PriceNegotiation = "Price Negotiation", 
-        Deal = "Deal", 
-        Meetup = "Meetup", 
-      } 
       Let's say you are selling airpods pro for 30 dollars. Make sure you don't go below 27 dollars. 
       Here is the conversation up to this point in chronological order, where True means a message the buyer sent, and false means a message that we have already sent.
-      After you guys agree on a price, suggest places to meetup for the sale. 
+      After you guys agree on a price, suggest places to meetup for the sale. There is a high preference on locations in ${locations}. 
       This is the conversation ${allMessages}, please respond to the latest message.
     `;
 
@@ -214,6 +228,25 @@ export const respondToKijiji = async () => {
     model: openai("gpt-4o"),
     prompt: NegotiationPrompt,
   });
+  enum NegotiationStage { 
+    Preliminary = "Preliminary", 
+    PriceNegotiation = "Price Negotiation", 
+    Deal = "Deal", 
+    Meetup = "Meetup", 
+  } 
+  const status = await generateObject({
+    model: openai("gpt-4o"),
+    prompt: `Based on the conversation ${allMessages}, which stage is this negotiation in?`,
+    schema: z.object({
+      stage: z.nativeEnum(NegotiationStage)
+    })
+  })
+   
+  const lead = await client.mutation(api.leads.upsert, {
+    kijijiLink: adLink,
+    name: incoming[0], // First message from buyer usually contains their name
+    status: status.object.stage
+  })
 
   if (response.text) {
     const result = await response.text;

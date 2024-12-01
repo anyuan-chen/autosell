@@ -1,15 +1,12 @@
 import "dotenv/config";
 import { shopifyStagehand } from "app";
 
-
 export const runShopifyLogin = async () => {
   await shopifyStagehand.init({
     domSettleTimeoutMs: 40000,
   });
-  
-  await shopifyStagehand.page.goto(
-  `${process.env.SHOPIFY_STORE_LINK}`,
-  );
+
+  await shopifyStagehand.page.goto(`${process.env.SHOPIFY_STORE_LINK}`);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -18,22 +15,22 @@ export const runShopifyLogin = async () => {
     `${process.env.SHOPIFY_EMAIL}`,
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await shopifyStagehand.page.click('button[name="commit"]')
+  await shopifyStagehand.page.click('button[name="commit"]');
 
-  console.log("clicking log in with email button")
+  console.log("clicking log in with email button");
 
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await shopifyStagehand.page.fill(
     "#account_password",
     `${process.env.SHOPIFY_PASSWORD}`,
   );
 
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await shopifyStagehand.page.click('button[name="commit"]')
+  await shopifyStagehand.page.click('button[name="commit"]');
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 };
@@ -87,6 +84,19 @@ const createShopifyProduct = async (
   const submitButton = shopifyStagehand.page.locator('[aria-label="Save"]');
   await submitButton.click();
 
+  const previewButton = shopifyStagehand.page
+    .locator('[aria-label="Preview on Online Store"]')
+    .nth(1);
+
+  console.log(previewButton);
+  const innerHTML = previewButton.innerHTML();
+  console.log("inner html: ", innerHTML);
+
+  const innerText = previewButton.innerText();
+  console.log("inner text: ", innerText);
+
+  await previewButton.click();
+
   return shopifyStagehand.page.url();
 };
 
@@ -96,10 +106,5 @@ export const postShopifyAd = async (
   description: string,
   price: number,
 ) => {
-  return await createShopifyProduct(
-    src,
-    title,
-    description,
-    price,
-  );
+  return await createShopifyProduct(src, title, description, price);
 };

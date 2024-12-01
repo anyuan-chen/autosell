@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-export const prisma = new PrismaClient();
+import prisma from "@/lib/db";
 
 export async function GET() {
   try {
@@ -9,7 +7,7 @@ export async function GET() {
         rank: "asc",
       },
     });
-
+    console.log("locations", locations);
     return Response.json({
       success: true,
       locations,
@@ -26,14 +24,13 @@ export async function GET() {
 interface LocationInput {
   name: string;
   address: string;
-  coordinates: [number, number];
+  long: number;
+  lat: number;
   rank: number;
-  safetyInfo?: {
-    isPublicPlace: boolean;
-    hasPeopleAround: boolean;
-    hasSecurityCameras: boolean;
-    reasoning?: string;
-  };
+  isPublicPlace: boolean;
+  hasPeopleAround: boolean;
+  hasSecurityCameras: boolean;
+  reasoning?: string;
 }
 
 export async function POST(request: Request) {
@@ -41,21 +38,24 @@ export async function POST(request: Request) {
     const { locations } = (await request.json()) as {
       locations: LocationInput[];
     };
-
     // Use transaction to ensure atomicity
-    await prisma.$transaction(async (tx: PrismaClient) => {
+    await prisma.$transaction(async (prisma) => {
       // Delete all existing locations
-      await tx.location.deleteMany();
+      await prisma.location.deleteMany();
 
       // Insert new locations
       if (locations.length > 0) {
-        await tx.location.createMany({
+        await prisma.location.createMany({
           data: locations.map((loc) => ({
             name: loc.name,
             address: loc.address,
-            coordinates: loc.coordinates,
+            long: loc.long,
+            lat: loc.lat,
+            reasoning: loc.reasoning ?? "",
             rank: loc.rank,
-            safetyInfo: loc.safetyInfo,
+            isPublicPlace: loc.isPublicPlace,
+            hasPeopleAround: loc.hasPeopleAround,
+            hasSecurityCameras: loc.hasSecurityCameras,
           })),
         });
       }

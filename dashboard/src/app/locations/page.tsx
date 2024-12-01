@@ -34,13 +34,12 @@ interface Location {
   name: string;
   rank: number;
   address: string;
-  coordinates: [number, number];
-  safetyInfo?: {
-    isPublicPlace: boolean;
-    hasPeopleAround: boolean;
-    hasSecurityCameras: boolean;
-    reasoning: string;
-  };
+  long: number;
+  lat: number;
+  isPublicPlace: boolean;
+  hasPeopleAround: boolean;
+  hasSecurityCameras: boolean;
+  reasoning: string;
 }
 
 export function SortableLocation({ location }: { location: Location }) {
@@ -69,39 +68,36 @@ export function SortableLocation({ location }: { location: Location }) {
             <p className="text-sm text-gray-400">{location.address}</p>
           </div>
           <div className="text-xs text-gray-400">
-            ({location.coordinates[0].toFixed(4)},{" "}
-            {location.coordinates[1].toFixed(4)})
+            ({location.long.toFixed(4)}, {location.lat.toFixed(4)})
           </div>
         </div>
 
-        {location.safetyInfo && (
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <div className="flex items-center gap-1">
-              {location.safetyInfo.isPublicPlace ? (
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-              ) : (
-                <XCircle className="w-4 h-4 text-red-500" />
-              )}
-              <span className="text-sm">Public Place</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {location.safetyInfo.hasPeopleAround ? (
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-              ) : (
-                <XCircle className="w-4 h-4 text-red-500" />
-              )}
-              <span className="text-sm">People Around</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {location.safetyInfo.hasSecurityCameras ? (
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-              ) : (
-                <XCircle className="w-4 h-4 text-red-500" />
-              )}
-              <span className="text-sm">Security Cameras</span>
-            </div>
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          <div className="flex items-center gap-1">
+            {location.isPublicPlace ? (
+              <CheckCircle2 className="w-4 h-4 text-green-500" />
+            ) : (
+              <XCircle className="w-4 h-4 text-red-500" />
+            )}
+            <span className="text-sm">Public Place</span>
           </div>
-        )}
+          <div className="flex items-center gap-1">
+            {location.hasPeopleAround ? (
+              <CheckCircle2 className="w-4 h-4 text-green-500" />
+            ) : (
+              <XCircle className="w-4 h-4 text-red-500" />
+            )}
+            <span className="text-sm">People Around</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {location.hasSecurityCameras ? (
+              <CheckCircle2 className="w-4 h-4 text-green-500" />
+            ) : (
+              <XCircle className="w-4 h-4 text-red-500" />
+            )}
+            <span className="text-sm">Security Cameras</span>
+          </div>
+        </div>
       </div>
     </li>
   );
@@ -185,6 +181,7 @@ export default function LocationList() {
 
   const addLocation = async () => {
     if (newLocation && locations) {
+      console.log(newLocation, locations)
       await replaceAll({
         locations: [...locations, { ...newLocation, rank: locations.length }],
       });
@@ -215,7 +212,8 @@ export default function LocationList() {
                       (prev) =>
                         ({
                           ...prev,
-                          coordinates: [lng, lat],
+                          long: lng,
+                          lat: lat,
                           name,
                           address,
                         }) as Location
@@ -226,15 +224,25 @@ export default function LocationList() {
                       )}`
                     )
                       .then((res) => res.json())
-                      .then((safetyInfo) => {
-                        setNewLocation((prev) => {
-                          if (!prev) return null;
-                          return {
-                            ...prev,
-                            safetyInfo,
-                          };
-                        });
-                      })
+                      .then(
+                        ({
+                          isPublicPlace,
+                          hasPeopleAround,
+                          hasSecurityCameras,
+                          reasoning,
+                        }) => {
+                          setNewLocation((prev) => {
+                            if (!prev) return null;
+                            return {
+                              ...prev,
+                              isPublicPlace,
+                              hasPeopleAround,
+                              hasSecurityCameras,
+                              reasoning,
+                            };
+                          });
+                        }
+                      )
                       .catch((error) => {
                         console.error(
                           "Failed to get location safety info:",
@@ -245,10 +253,10 @@ export default function LocationList() {
                 />
               </div>
               <div className="border rounded-md p-4">
-                {newLocation?.safetyInfo && (
+                {newLocation && (
                   <div className="text-sm text-gray-500 space-y-2">
                     <div className="flex items-center">
-                      {newLocation.safetyInfo.isPublicPlace ? (
+                      {newLocation.isPublicPlace ? (
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
                       ) : (
                         <XCircle className="h-4 w-4 text-red-500" />
@@ -256,7 +264,7 @@ export default function LocationList() {
                       <span className="ml-2">Public Place</span>
                     </div>
                     <div className="flex items-center">
-                      {newLocation.safetyInfo.hasPeopleAround ? (
+                      {newLocation.hasPeopleAround ? (
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
                       ) : (
                         <XCircle className="h-4 w-4 text-red-500" />
@@ -264,25 +272,20 @@ export default function LocationList() {
                       <span className="ml-2">People Around</span>
                     </div>
                     <div className="flex items-center">
-                      {newLocation.safetyInfo.hasSecurityCameras ? (
+                      {newLocation.hasSecurityCameras ? (
                         <CheckCircle2 className="h-4 w-4 text-green-500" />
                       ) : (
                         <XCircle className="h-4 w-4 text-red-500" />
                       )}
                       <span className="ml-2">Security Cameras</span>
                     </div>
-                    <div className="pt-8">
-                      {newLocation.safetyInfo.reasoning}
-                    </div>
+                    <div className="pt-8">{newLocation.reasoning}</div>
                   </div>
                 )}
               </div>
             </div>
             <div className="flex justify-end">
-              <Button
-                onClick={addLocation}
-                disabled={!newLocation?.name || !newLocation?.coordinates}
-              >
+              <Button onClick={addLocation} disabled={!newLocation?.name}>
                 Save
               </Button>
             </div>
@@ -317,16 +320,7 @@ export default function LocationList() {
           >
             <ul className="space-y-2">
               {locations.map((location: Location) => (
-                <SortableLocation
-                  key={location.name}
-                  location={{
-                    ...location,
-                    coordinates: [
-                      location.coordinates[0],
-                      location.coordinates[1],
-                    ] as [number, number],
-                  }}
-                />
+                <SortableLocation key={location.name} location={location} />
               ))}
             </ul>
           </SortableContext>

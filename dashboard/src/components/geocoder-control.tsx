@@ -17,11 +17,9 @@ type GeocoderControlProps = Omit<
     name: string,
     address: string,
     fullText: string,
-    safetyInfo?: {
-      isPublicPlace: boolean;
-      hasPeopleAround: boolean;
-      hasSecurityCameras: boolean;
-    }
+    isPublicPlace: boolean,
+    hasPeopleAround: boolean,
+    hasSecurityCameras: boolean
   ) => void;
 
   onLoading?: (e: object) => void;
@@ -73,14 +71,15 @@ export default function GeocoderControl(props: GeocoderControlProps) {
               )}`
             );
             const safetyInfo = await safetyResponse.json();
-
             props.onLocationSelect(
               location[0],
               location[1],
               result.text,
               result.properties.address,
               JSON.stringify(evt),
-              safetyInfo
+              safetyInfo.isPublicPlace,
+              safetyInfo.hasPeopleAround,
+              safetyInfo.hasSecurityCameras
             );
           } catch (error) {
             console.error("Error fetching safety info:", error);
@@ -89,7 +88,10 @@ export default function GeocoderControl(props: GeocoderControlProps) {
               location[1],
               result.text,
               result.properties.address,
-              JSON.stringify(evt)
+              JSON.stringify(evt),
+              false,
+              false,
+              false
             );
           }
         }

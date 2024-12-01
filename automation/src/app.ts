@@ -166,6 +166,7 @@ app.post("/post-shopify", async (req: Request, res: Response) => {
     const url = await postToShopify(src);
     res.send({ url });
   } catch (error) {
+    console.log("error: ", error);
     res.status(500).json({ error: error });
   }
 });

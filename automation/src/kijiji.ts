@@ -12,7 +12,6 @@ import {
 } from "types";
 import { generateObject, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { text } from "express";
 
 export type KijijiSubcategory =
   | KijijiClothingCategory

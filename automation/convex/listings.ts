@@ -27,7 +27,7 @@ export const get = query({
     const listing = await ctx.db
       .query("listings")
       .filter((q) => q.eq(q.field("src"), args.src)).first()
-    console.log("after listing")
+    console.log("after listing", listing)
     return listing;
   },
 });

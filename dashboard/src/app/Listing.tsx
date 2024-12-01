@@ -6,7 +6,7 @@ import { LeadStatus } from "./LeadStatus";
 import Image from "next/image";
 
 export interface Lead {
-  _id: string;
+  id: string;
   name: string;
   status: "Preliminary" | "Price Negotiation" | "Deal" | "Meetup";
   messageLogs: string;
@@ -14,7 +14,7 @@ export interface Lead {
 
 interface ListingProps {
   listing: {
-    _id: string;
+    id: string;
     title: string;
     price: number;
     kijijiLink?: string;
@@ -79,7 +79,7 @@ export function Listing({ listing }: ListingProps) {
             <ul className="space-y-2">
               {listing.leads.map((lead) => (
                 <li
-                  key={lead._id}
+                  key={lead.id}
                   className="flex justify-between items-center"
                 >
                   <span>{lead.name}</span>

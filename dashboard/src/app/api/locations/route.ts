@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     };
 
     // Use transaction to ensure atomicity
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: PrismaClient) => {
       // Delete all existing locations
       await tx.location.deleteMany();
 

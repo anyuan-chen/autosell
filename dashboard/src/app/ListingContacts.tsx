@@ -2,7 +2,6 @@
 
 import { Listing } from "./Listing";
 import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
 
 export function ListingsContainer() {
   const listings = useQuery(api.listings.getAll);
@@ -26,7 +25,7 @@ export function ListingsContainer() {
       ) : (
         <div className="space-y-4">
           {listings.map((listing) => (
-            <Listing key={listing._id} listing={listing} />
+            <Listing key={listing.id} listing={listing} />
           ))}
         </div>
       )}

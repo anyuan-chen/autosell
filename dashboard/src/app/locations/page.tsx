@@ -28,12 +28,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import MapComponent from "@/components/map-search";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
 
 interface Location {
-  _id: string;
+  id: string;
   name: string;
+  rank: number;
   address: string;
   coordinates: [number, number];
   safetyInfo?: {
@@ -46,7 +45,7 @@ interface Location {
 
 export function SortableLocation({ location }: { location: Location }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: location._id });
+    useSortable({ id: location.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -109,8 +108,43 @@ export function SortableLocation({ location }: { location: Location }) {
 }
 
 export default function LocationList() {
-  const locations = useQuery(api.locations.getAll);
-  const replaceAll = useMutation(api.locations.replaceAll);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch("/api/locations");
+        const data = await response.json();
+        if (data.success) {
+          setLocations(data.locations);
+        }
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchLocations();
+  }, []);
+
+  const replaceAll = async (newLocations: { locations: Location[] }) => {
+    try {
+      const response = await fetch("/api/locations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newLocations),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setLocations(newLocations.locations);
+      }
+    } catch (error) {
+      console.error("Error replacing locations:", error);
+    }
+  };
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newLocation, setNewLocation] = useState<Location | null>(null);
@@ -138,14 +172,12 @@ export default function LocationList() {
 
     if (active.id !== over?.id && locations) {
       const newLocations = [...locations];
-      const oldIndex = newLocations.findIndex((item) => item._id === active.id);
-      const newIndex = newLocations.findIndex((item) => item._id === over?.id);
+      const oldIndex = newLocations.findIndex((item) => item.id === active.id);
+      const newIndex = newLocations.findIndex((item) => item.id === over?.id);
       const reorderedLocations = arrayMove(newLocations, oldIndex, newIndex);
       const locationsWithRank = reorderedLocations.map((loc, idx) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _id, _creationTime, ...rest } = loc;
         return {
-          ...rest,
+          ...loc,
           rank: idx,
         };
       });
@@ -281,7 +313,7 @@ export default function LocationList() {
         >
           <SortableContext
             items={locations.map((location: Location) => ({
-              id: location._id,
+              id: location.id,
             }))}
             strategy={verticalListSortingStrategy}
           >

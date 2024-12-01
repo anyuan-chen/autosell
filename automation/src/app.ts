@@ -4,25 +4,13 @@ import cors from "cors";
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-import { postKijijiAd, responder, runKijijiLogin } from "kijiji.js";
-=======
 import { postKijijiAd } from "kijiji.js";
->>>>>>> Stashed changes
-=======
-import { postKijijiAd } from "kijiji.js";
->>>>>>> Stashed changes
 import { postShopifyAd } from "shopify.js";
 import { postCraigsListAd } from "craiglist.js";
 
 dotenv.config({ path: ".env.local" });
 
 export const kijijiResponseStagehand = new Stagehand({
-<<<<<<< Updated upstream
-export const kijijiResponseStagehand = new Stagehand({
-=======
->>>>>>> Stashed changes
   env: "LOCAL",
 });
 export const kijijiStagehand = new Stagehand({
@@ -49,7 +37,6 @@ app.use(
 
 app.use(express.json());
 
-
 const postToKijiji = async (src: string) => {
   const listing = await client.query(api.listings.get, { src });
   if (!listing) {
@@ -57,12 +44,7 @@ const postToKijiji = async (src: string) => {
   }
 
   try {
-    await postKijijiAd(
-      src,
-      listing.title,
-      listing.description, 
-      listing.price,
-    );
+    await postKijijiAd(src, listing.title, listing.description, listing.price);
   } catch (error) {
     console.error("Error posting Kijiji ad:", error);
     throw new Error("Failed to post Kijiji ad\n" + error);
@@ -72,7 +54,7 @@ const postToKijiji = async (src: string) => {
   let url = await kijijiStagehand.page.url();
   console.log("Final URL:", url);
 
-  return url?.indexOf("posted") === -1 
+  return url?.indexOf("posted") === -1
     ? url
     : url.substring(0, url.indexOf("posted"));
 };
@@ -84,12 +66,7 @@ const postToShopify = async (src: string) => {
   }
 
   try {
-    await postShopifyAd(
-      src,
-      listing.title,
-      listing.description,
-      listing.price,
-    );
+    await postShopifyAd(src, listing.title, listing.description, listing.price);
   } catch (error) {
     console.error("Error posting Shopify ad:", error);
     throw new Error("Failed to post Shopify ad\n" + error);
@@ -183,13 +160,13 @@ app.post("/post", async (req: Request, res: Response) => {
     const [kijijiUrl, shopifyUrl, craigslistUrl] = await Promise.all([
       postToKijiji(src),
       postToShopify(src),
-      postToCraigslist(src)
+      postToCraigslist(src),
     ]);
 
     res.send({
       kijijiUrl,
       shopifyUrl,
-      craigslistUrl
+      craigslistUrl,
     });
   } catch (error) {
     res.status(500).json({ error: error });

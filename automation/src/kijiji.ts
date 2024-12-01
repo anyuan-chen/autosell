@@ -163,19 +163,6 @@ export const respondToKijiji = async () => {
   // // console.log("Price: ", listingPrice);
   // // console.log("minPrice: ", minPrice);
 
-  const priceBox = kijijiResponseStagehand.page.locator(
-    `[class="headerPrice*"]`,
-  );
-
-  let price: number = 0;
-
-  const priceText = await priceBox.textContent();
-  if (priceText) {
-    price = parseFloat(priceText || "0");
-  }
-
-  console.log(price);
-
   const messageBox = kijijiResponseStagehand.page.locator(
     '[data-testid="MessageList"]',
   );
@@ -218,7 +205,7 @@ export const respondToKijiji = async () => {
         Deal = "Deal", 
         Meetup = "Meetup", 
       } 
-      Let's say you are selling airpods pro for ${price} dollars. Make sure you don't go below ${price * 0.89} dollars. 
+      Let's say you are selling airpods pro for 30 dollars. Make sure you don't go below 27 dollars. 
       Here is the conversation up to this point in chronological order, where True means a message the buyer sent, and false means a message that we have already sent.
       After you guys agree on a price, suggest places to meetup for the sale. 
       This is the conversation ${allMessages}, please respond to the latest message.
@@ -317,6 +304,6 @@ export const postKijijiAd = async (
 };
 
 export async function responder() {
-  // await respondToKijiji();
+  await respondToKijiji();
   setTimeout(responder, 1000);
 }

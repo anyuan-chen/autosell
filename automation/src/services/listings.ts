@@ -14,7 +14,7 @@ export const getAll = async () => {
 export const get = async (src: string) => {
   const listing = await prisma.listing.findFirst({
     where: {
-      src,
+      src: src
     },
   });
   return listing;
@@ -23,7 +23,7 @@ export const get = async (src: string) => {
 export const getByKijijiLink = async (kijijiLink: string) => {
   const listing = await prisma.listing.findFirst({
     where: {
-      kijijiLink,
+      kijijiLink: kijijiLink
     },
   });
   return listing;
@@ -50,13 +50,16 @@ export const upsert = async ({
   const existingListing = await prisma.listing.findFirst({
     where: {
       OR: [
-        { kijijiLink: kijijiLink || null },
-        { craigslistLink: craigslistLink || null },
-        { shopifyLink: shopifyLink || null },
+        { kijijiLink: kijijiLink ?? ""  },
+        { craigslistLink: craigslistLink ?? ""  },
+        { shopifyLink: shopifyLink ?? ""},
         { src },
       ],
     },
   });
+
+  console.log(`[upserting listing] title: ${title}, price: ${price}, kijijilink: ${kijijiLink}, craigslistlink: ${craigslistLink}, shopifylink: ${shopifyLink}, src: ${src}, description: ${description}`) 
+  console.log(`[exiting listing]`, existingListing)
 
   if (existingListing) {
     const updated = await prisma.listing.update({
@@ -65,12 +68,12 @@ export const upsert = async ({
       },
       data: {
         src,
-        title: title || existingListing.title,
-        price: price || existingListing.price,
-        kijijiLink: kijijiLink || null,
-        craigslistLink: craigslistLink || null,
-        shopifyLink: shopifyLink || null,
-        description: description || existingListing.description,
+        title: title ?? existingListing.title,
+        price: price ?? existingListing.price,
+        kijijiLink: kijijiLink ?? existingListing.kijijiLink,
+        craigslistLink: craigslistLink ?? existingListing.craigslistLink,
+        shopifyLink: shopifyLink ?? existingListing.shopifyLink,
+        description: description ?? existingListing.description,
       },
     });
     return updated.id;
@@ -80,12 +83,12 @@ export const upsert = async ({
   const created = await prisma.listing.create({
     data: {
       src,
-      title: title || "",
-      price: price || 0,
-      kijijiLink: kijijiLink || null,
-      craigslistLink: craigslistLink || null,
-      shopifyLink: shopifyLink || null,
-      description: description || "",
+      title: title ?? "",
+      price: price ?? 0,
+      kijijiLink: kijijiLink ?? null,
+      craigslistLink: craigslistLink ?? null,
+      shopifyLink: shopifyLink ?? null,
+      description: description ?? "",
     },
   });
   return created.id;

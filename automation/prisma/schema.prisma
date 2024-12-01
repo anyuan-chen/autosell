@@ -33,11 +33,11 @@ model Listing {
 }
 
 model Lead {
-  listing     Listing @relation(fields: [listingId], references: [id])
   listingId   Int
   name        String
   messageLogs String
   status      String
+  listing     Listing @relation(fields: [listingId], references: [id])
 
   @@id([name, listingId])
 }

@@ -1,26 +1,43 @@
-interface LeadStatusProps {
-  status: "inquiry" | "negotiation" | "closing";
-}
+import { useState, useEffect } from "react";
+import { Lead } from "./Listing";
 
-export function LeadStatus({ status }: LeadStatusProps) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "inquiry":
-        return "bg-blue-100 text-blue-800";
-      case "negotiation":
-        return "bg-yellow-100 text-yellow-800";
-      case "closing":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+export function LeadStatus({ lead }: { lead: Lead }) {
+  const [summary, setSummary] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const analyzeLead = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/analyze-conversation", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: lead.messageLogs,
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          setSummary(data.summary);
+        }
+      } catch (error) {
+        console.error("Error analyzing conversation:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    analyzeLead();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="text-sm text-gray-500">Analyzing conversation...</div>
+    );
+  }
 
   return (
-    <span
-      className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
-    >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
-    </span>
+    <div className="text-sm text-gray-700">{summary || "No messages yet"}</div>
   );
 }

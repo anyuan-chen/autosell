@@ -6,6 +6,7 @@ export const upsert = mutation({
   args: {
     kijijiLink: v.string(),
     name: v.string(),
+    messageLogs: v.string(),
     status: v.union(
       v.literal("Preliminary"),
       v.literal("Price Negotiation"),
@@ -14,7 +15,16 @@ export const upsert = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const listing = await ctx.db.query("listings").first();
+    const listing = await ctx.db
+      .query("listings")
+      .filter((q) => {
+        const listingAdId = new URL(
+          String(q.field("kijijiLink")),
+        ).searchParams.get("ad_id");
+        const leadAdId = new URL(args.kijijiLink).searchParams.get("ad_id");
+        return q.eq(listingAdId, leadAdId);
+      })
+      .first();
 
     if (!listing) {
       throw new Error("Listing not found");
@@ -41,6 +51,7 @@ export const upsert = mutation({
       listingId: listing._id,
       name: args.name,
       status: args.status,
+      messageLogs: args.messageLogs,
     });
     return leadId;
   },
@@ -51,9 +62,10 @@ export default {
     listingId: v.id("listings"),
     name: v.string(),
     status: v.union(
-      v.literal("inquiry"),
-      v.literal("negotiation"),
-      v.literal("closing"),
+      v.literal("Preliminary"),
+      v.literal("Price Negotiation"),
+      v.literal("Deal"),
+      v.literal("Meetup"),
     ),
   }),
 };

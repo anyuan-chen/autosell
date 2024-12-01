@@ -5,10 +5,11 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { LeadStatus } from "./LeadStatus";
 import Image from "next/image";
 
-interface Lead {
+export interface Lead {
   _id: string;
   name: string;
-  status: "inquiry" | "negotiation" | "closing";
+  status: "Preliminary" | "Price Negotiation" | "Deal" | "Meetup";
+  messageLogs: string;
 }
 
 interface ListingProps {
@@ -16,9 +17,9 @@ interface ListingProps {
     _id: string;
     title: string;
     price: number;
-    kijijiLink: string;
-    craigslistLink: string;
-    shopifyLink: string;
+    kijijiLink?: string;
+    craigslistLink?: string;
+    shopifyLink?: string;
     leads: Lead[];
   };
 }
@@ -83,6 +84,7 @@ export function Listing({ listing }: ListingProps) {
                 >
                   <span>{lead.name}</span>
                   <LeadStatus status={lead.status} />
+
                 </li>
               ))}
             </ul>

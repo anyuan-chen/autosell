@@ -29,6 +29,7 @@ export default defineSchema({
   leads: defineTable({
     listingId: v.id("listings"),
     name: v.string(),
+    messageLogs: v.string(),
     status: v.union(
       v.literal("Preliminary"),
       v.literal("Price Negotiation"),

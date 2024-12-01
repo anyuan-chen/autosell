@@ -222,9 +222,9 @@ export const respondToKijiji = async () => {
 
   const NegotiationPrompt = `
       You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. 
-      After every response, I want you to tell me what stage of the negotiation we are currently in out of the following categories! 
-      Let's say you are selling airpods pro for 30 dollars. Make sure you don't go below 27 dollars. 
       Here is the conversation up to this point in chronological order, where True means a message the buyer sent, and false means a message that we have already sent.
+      This is some information about the product that you are selling ${JSON.stringify(listing)}.
+
       After you guys agree on a price, suggest places to meetup for the sale. There is a high preference on locations in ${locations}. 
       This is the conversation ${allMessages}, please respond to the latest message.
     `;
@@ -247,11 +247,18 @@ export const respondToKijiji = async () => {
     }),
   });
 
+  const name = await kijijiResponseStagehand.page
+    .locator('a[class*="link"][href*="profile"]')
+    .innerText();
+
   const lead = await client.mutation(api.leads.upsert, {
     kijijiLink: adLink,
-    name: incoming[0], // First message from buyer usually contains their name
+    name: name,
     status: status.object.stage,
+    messageLogs: JSON.stringify(allMessages),
   });
+
+  console.log(lead);
 
   if (response.text) {
     const result = await response.text;

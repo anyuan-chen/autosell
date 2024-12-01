@@ -75,18 +75,26 @@ export function Listing({ listing }: ListingProps) {
       </div>
       {isExpanded && (
         <div className="bg-gray-50 p-4">
-          {listing.leads.length > 0 ? (
-            <ul className="space-y-2">
-              {listing.leads.map((lead) => (
-                <li
-                  key={lead.id}
-                  className="flex justify-between items-center"
-                >
-                  <span>{lead.name}</span>
-                  <LeadStatus lead={lead} />
-                </li>
-              ))}
-            </ul>
+          {listing && listing.leads && listing.leads.length > 0 ? (
+            listing.leads.map((lead: Lead) => (
+              <div
+                key={lead.id}
+                className="flex justify-between items-center mb-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Image
+                    src="/kijiji.jpg"
+                    alt="Kijiji"
+                    width={16}
+                    height={16}
+                  />
+                  <span className="w-32 font-medium text-gray-700">
+                    {lead.name}
+                  </span>
+                </div>
+                <LeadStatus lead={lead} />
+              </div>
+            ))
           ) : (
             <div className="text-center py-6 text-gray-500">
               <p>No leads yet</p>

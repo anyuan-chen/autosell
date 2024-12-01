@@ -15,6 +15,7 @@ import { PrismaClient } from "@prisma/client";
 
 dotenv.config({ path: ".env.local" });
 
+console.log("top")
 export const kijijiResponseStagehand = new Stagehand({
   env: "LOCAL",
 });
@@ -28,9 +29,10 @@ export const shopifyStagehand = new Stagehand({
   env: "LOCAL",
 });
 
+export const prisma = new PrismaClient();
+console.log("after prisma ")
 const app = express();
 const port = process.env.PORT || 3001;
-export const prisma = new PrismaClient();
 
 app.use(
   cors({

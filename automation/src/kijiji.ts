@@ -18,19 +18,6 @@ export type KijijiSubcategory =
   | KijijiClothingCategory
   | KijijiMusicalInstrumentCategory;
 
-const NegotiationPrompt = `
-      You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. I will pretend to negotiate with you and after every response, I want you to tell me what stage of the negotiation we are currently in out of the following categories! 
-      export enum NegotiationStage { 
-        Preliminary = "Preliminary", 
-        PriceNegotiation = "Price Negotiation", 
-        Deal = "Deal", 
-        Meetup = "Meetup", 
-      } 
-      Let's say you are selling airpods pro for 250 dollars. Make sure you don't go below 225 dollars. 
-      After you guys agree on a price, suggest places to meetup for the sale. 
-      Let the roleplay begin
-    `;
-
 const generateKijijiInfo = async (src: string) => {
   const productInfo = await generateText({
     model: openai("gpt-4o"),
@@ -70,11 +57,11 @@ export const runKijijiLogin = async (stagehand: Stagehand) => {
   await stagehand.page.goto(
     "https://id.kijiji.ca/login?service=https%3A%2F%2Fid.kijiji.ca%2Foauth2.0%2FcallbackAuthorize%3Fclient_id%3Dkijiji_horizontal_web_gpmPihV3%26redirect_uri%3Dhttps%253A%252F%252Fwww.kijiji.ca%252Fapi%252Fauth%252Fcallback%252Fcis%26response_type%3Dcode%26client_name%3DCasOAuthClient&locale=en&state=SteMlbjWnFA0Q1E2yVPRw9Pv0KSwaCNECrjy6DGrq20&scope=openid+email+profile",
   );
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
   await stagehand.page.fill("#username", "p25wang@uwaterloo.ca");
   await stagehand.page.fill("#password", `${process.env.KIJIJI_PASSWORD}`);
   await stagehand.page.click("#login-submit");
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 3000));
 };
 
 export const createKijijiAd = async (
@@ -147,13 +134,47 @@ export const createKijijiAd = async (
 };
 
 export const respondToKijiji = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 4000));
   await kijijiResponseStagehand.page.goto(
     "https://www.kijiji.ca/m-msg-my-messages/conversation/dphl:4j46msr:2m77f78qr",
   );
+  await new Promise((resolve) => setTimeout(resolve, 10000));
   const incoming: string[] = [];
   const outgoing: string[] = [];
   const allMessages: [string, boolean][] = [];
+
+  console.log("was here");
+
+  // const priceBox = kijijiResponseStagehand.page.locator(
+  //   '[data-testid="AdTitle"]',
+  // );
+  // const priceChildDivs = priceBox.locator("div");
+  // const count = await priceChildDivs.count();
+  // console.log("found the div with count: ", count);
+
+  // const priceGrandchildDiv = priceChildDivs.nth(0);
+  // console.log("found the grandchild div: ", priceGrandchildDiv);
+  // const priceText = await priceGrandchildDiv.textContent();
+  // console.log("found the text");
+
+  // // const listingPrice = parseFloat(priceChildText || "0");
+  // // const minPrice = listingPrice * 0.9;
+
+  // console.log("Price Child: ", priceText);
+  // // console.log("Price: ", listingPrice);
+  // // console.log("minPrice: ", minPrice);
+
+  const priceBox = kijijiResponseStagehand.page.locator(
+    `[class="headerPrice*"]`,
+  );
+
+  let price: number = 0;
+
+  const priceText = await priceBox.textContent();
+  if (priceText) {
+    price = parseFloat(priceText || "0");
+  }
+
+  console.log(price);
 
   const messageBox = kijijiResponseStagehand.page.locator(
     '[data-testid="MessageList"]',
@@ -188,9 +209,44 @@ export const respondToKijiji = async () => {
     allMessages.push([textContent, direction == "INBOUND" ? true : false]);
   }
 
+  const NegotiationPrompt = `
+      You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. 
+      After every response, I want you to tell me what stage of the negotiation we are currently in out of the following categories! 
+      export enum NegotiationStage { 
+        Preliminary = "Preliminary", 
+        PriceNegotiation = "Price Negotiation", 
+        Deal = "Deal", 
+        Meetup = "Meetup", 
+      } 
+      Let's say you are selling airpods pro for ${price} dollars. Make sure you don't go below ${price * 0.89} dollars. 
+      Here is the conversation up to this point in chronological order, where True means a message the buyer sent, and false means a message that we have already sent.
+      After you guys agree on a price, suggest places to meetup for the sale. 
+      This is the conversation ${allMessages}, please respond to the latest message.
+    `;
+
+  const response = await generateText({
+    model: openai("gpt-4o"),
+    prompt: NegotiationPrompt,
+  });
+
+  if (response.text) {
+    const result = await response.text;
+    console.log(result);
+  } else {
+    console.log("Unexpected response format:", response);
+  }
+
   console.log("Incoming messages:", incoming);
   console.log("Outgoing messages:", outgoing);
   console.log("All messages:", allMessages);
+
+  const messages = response.text.split("\n");
+  await kijijiResponseStagehand.page.fill("#SendMessageForm", messages[0]);
+
+  const sendButton = kijijiResponseStagehand.page.locator(
+    '[data-testid="SendMessage"]',
+  );
+  await sendButton.click();
 };
 
 export const MessageScanner = async () => {

@@ -42,173 +42,174 @@ app.use(
 
 app.use(express.json());
 
-const postToKijiji = async (src: string) => {
-  const listing = await client.query(api.listings.get, { src: src });
-  console.log("listing", listing);
-  if (!listing) {
-    throw new Error("Listing not found");
-  }
-
-  try {
-    await postKijijiAd(src, listing.title, listing.description, listing.price);
-  } catch (error) {
-    console.error("Error posting Kijiji ad:", error);
-    throw new Error("Failed to post Kijiji ad\n" + error);
-  }
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  let url = await kijijiStagehand.page.url();
-  console.log("Final URL:", url);
-
-  return url?.indexOf("posted") === -1
-    ? url
-    : url.substring(0, url.indexOf("posted"));
+const run = async () => {
+  await runShopifyLogin();
+  const retUrl = await postShopifyAd(
+    "https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_UF894,1000_QL80_.jpg",
+    "airpods pro 2",
+    "brand new pair of airpod pros",
+    250,
+  );
+  console.log(retUrl);
 };
 
-const postToShopify = async (src: string) => {
-  console.log("before listing", src);
+run();
 
-  const listing = await client.query(api.listings.get, { src });
+// const postToKijiji = async (src: string) => {
+//   const listing = await client.query(api.listings.get, { src: src });
+//   if (!listing) {
+//     throw new Error("Listing not found");
+//   }
 
-  console.log("listing: ", listing)
-  
-  if (!listing) {
-    throw new Error("Listing not found");
-  }
+//   try {
+//     await postKijijiAd(src, listing.title, listing.description, listing.price);
+//   } catch (error) {
+//     console.error("Error posting Kijiji ad:", error);
+//     throw new Error("Failed to post Kijiji ad\n" + error);
+//   }
 
-  try {
-    await postShopifyAd(src, listing.title, listing.description, listing.price);
-  } catch (error) {
-    console.error("Error posting Shopify ad:", error);
-    throw new Error("Failed to post Shopify ad\n" + error);
-  }
+//   await new Promise((resolve) => setTimeout(resolve, 2000));
+//   let url = kijijiStagehand.page.url();
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  let url = await shopifyStagehand.page.url();
-  await client.mutation(api.listings.upsert, {
-    src: src,
-    shopifyLink: url,
-  });
-  console.log("Final URL:", url);
+//   return url?.indexOf("posted") === -1
+//     ? url
+//     : url.substring(0, url.indexOf("posted"));
+// };
 
-  return url;
-};
+// const postToShopify = async (src: string) => {
+//   const listing = await client.query(api.listings.get, { src });
 
-const postToCraigslist = async (src: string) => {
-  const listing = await client.query(api.listings.get, { src });
-  if (!listing) {
-    throw new Error("Listing not found");
-  }
+//   if (!listing) {
+//     throw new Error("Listing not found");
+//   }
 
-  try {
-    const craigslistInfo = await generateObject({
-      model: openai("gpt-4o"),
-      prompt: `Here is some information about a product: ${listing.title} - ${listing.description}. Based on this information, generate a Craigslist listing with the following fields:
-      - category: The appropriate Craigslist sale category`,
-      schema: z.object({
-        category: z.nativeEnum(CraigsListSaleCategory),
-      }),
-    });
-    await postCraigsListAd(
-      src,
-      craigslistStagehand,
-      craigslistInfo.object.category,
-    );
-  } catch (error) {
-    console.error("Error posting Craigslist ad:", error);
-    throw new Error("Failed to post Craigslist ad\n" + error);
-  }
+//   try {
+//     await postShopifyAd(src, listing.title, listing.description, listing.price);
+//   } catch (error) {
+//     console.error("Error posting Shopify ad:", error);
+//     throw new Error("Failed to post Shopify ad\n" + error);
+//   }
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-  let url = await craigslistStagehand.page.url();
-  console.log("Final URL:", url);
-  await client.mutation(api.listings.upsert, {
-    src: src,
-    craigslistLink: url,
-  });
-  return url;
-};
+//   await new Promise((resolve) => setTimeout(resolve, 2000));
+//   let url = shopifyStagehand.page.url();
+//   await client.mutation(api.listings.upsert, {
+//     src: src,
+//     shopifyLink: url,
+//   });
+//   return url;
+// };
 
-// @ts-ignore
-app.post("/post-kijiji", async (req: Request, res: Response) => {
-  const { src } = req.body;
-  console.log(src);
-  if (!src || typeof src !== "string") {
-    return res.status(400).json({ error: "Missing or invalid src parameter" });
-  }
+// const postToCraigslist = async (src: string) => {
+//   const listing = await client.query(api.listings.get, { src });
+//   if (!listing) {
+//     throw new Error("Listing not found");
+//   }
 
-  try {
-    console.log("here");
-    const url = await postToKijiji(src);
-    await client.mutation(api.listings.upsert, {
-      src: src,
-      kijijiLink: url,
-    });
-    console.log("there");
-    res.send({ url });
-  } catch (error) {
-    res.status(500).json({ error: error });
-  }
-});
+//   try {
+//     const craigslistInfo = await generateObject({
+//       model: openai("gpt-4o"),
+//       prompt: `Here is some information about a product: ${listing.title} - ${listing.description}. Based on this information, generate a Craigslist listing with the following fields:
+//       - category: The appropriate Craigslist sale category`,
+//       schema: z.object({
+//         category: z.nativeEnum(CraigsListSaleCategory),
+//       }),
+//     });
+//     await postCraigsListAd(
+//       src,
+//       craigslistStagehand,
+//       craigslistInfo.object.category,
+//     );
+//   } catch (error) {
+//     console.error("Error posting Craigslist ad:", error);
+//     throw new Error("Failed to post Craigslist ad\n" + error);
+//   }
 
-// @ts-ignore
-app.post("/post-shopify", async (req: Request, res: Response) => {
-  const { src } = req.body;
-  if (!src || typeof src !== "string") {
-    return res.status(400).json({ error: "Missing or invalid src parameter" });
-  }
+//   await new Promise((resolve) => setTimeout(resolve, 2000));
+//   let url = craigslistStagehand.page.url();
+//   await client.mutation(api.listings.upsert, {
+//     src: src,
+//     craigslistLink: url,
+//   });
+//   return url;
+// };
 
-  try {
-    const url = await postToShopify(src);
-    res.send({ url });
-  } catch (error) {
-    console.log("error: ", error);
-    res.status(500).json({ error: error });
-  }
-});
+// // @ts-ignore
+// app.post("/post-kijiji", async (req: Request, res: Response) => {
+//   const { src } = req.body;
+//   if (!src || typeof src !== "string") {
+//     return res.status(400).json({ error: "Missing or invalid src parameter" });
+//   }
 
-// @ts-ignore
-app.post("/post-craigslist", async (req: Request, res: Response) => {
-  const { src } = req.body;
-  if (!src || typeof src !== "string") {
-    return res.status(400).json({ error: "Missing or invalid src parameter" });
-  }
+//   try {
+//     const url = await postToKijiji(src);
+//     await client.mutation(api.listings.upsert, {
+//       src: src,
+//       kijijiLink: url,
+//     });
+//     res.send({ url });
+//   } catch (error) {
+//     res.status(500).json({ error: error });
+//   }
+// });
 
-  try {
-    const url = await postToCraigslist(src);
-    res.send({ url });
-  } catch (error) {
-    res.status(500).json({ error: error });
-  }
-});
+// // @ts-ignore
+// app.post("/post-shopify", async (req: Request, res: Response) => {
+//   const { src } = req.body;
+//   if (!src || typeof src !== "string") {
+//     return res.status(400).json({ error: "Missing or invalid src parameter" });
+//   }
 
-// @ts-ignore
-app.post("/post", async (req: Request, res: Response) => {
-  const { src } = req.body;
-  if (!src || typeof src !== "string") {
-    return res.status(400).json({ error: "Missing or invalid src parameter" });
-  }
-  console.log("what is going on");
-  try {
-    const [kijijiUrl, shopifyUrl, craigslistUrl] = await Promise.all([
-      postToKijiji(src),
-      postToShopify(src),
-      postToCraigslist(src),
-    ]);
+//   try {
+//     const url = await postToShopify(src);
+//     res.send({ url });
+//   } catch (error) {
+//     console.log("error: ", error);
+//     res.status(500).json({ error: error });
+//   }
+// });
 
-    res.send({
-      kijijiUrl,
-      shopifyUrl,
-      craigslistUrl,
-    });
-  } catch (error) {
-    res.status(500).json({ error: JSON.stringify(error) });
-  }
-});
+// // @ts-ignore
+// app.post("/post-craigslist", async (req: Request, res: Response) => {
+//   const { src } = req.body;
+//   if (!src || typeof src !== "string") {
+//     return res.status(400).json({ error: "Missing or invalid src parameter" });
+//   }
 
-app.listen(port, async () => {
-  runShopifyLogin();
-  runCraigsListLogin(craigslistStagehand);
-  runKijijiLogin(kijijiStagehand);
-  console.log(`Server listening on port ${port}`);
-});
+//   try {
+//     const url = await postToCraigslist(src);
+//     res.send({ url });
+//   } catch (error) {
+//     res.status(500).json({ error: error });
+//   }
+// });
+
+// // @ts-ignore
+// app.post("/post", async (req: Request, res: Response) => {
+//   const { src } = req.body;
+//   if (!src || typeof src !== "string") {
+//     return res.status(400).json({ error: "Missing or invalid src parameter" });
+//   }
+//   console.log("what is going on");
+//   try {
+//     const [kijijiUrl, shopifyUrl, craigslistUrl] = await Promise.all([
+//       postToKijiji(src),
+//       postToShopify(src),
+//       postToCraigslist(src),
+//     ]);
+
+//     res.send({
+//       kijijiUrl,
+//       shopifyUrl,
+//       craigslistUrl,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: JSON.stringify(error) });
+//   }
+// });
+
+// app.listen(port, async () => {
+//   runShopifyLogin();
+//   runCraigsListLogin(craigslistStagehand);
+//   runKijijiLogin(kijijiStagehand);
+//   console.log(`Server listening on port ${port}`);
+// });

@@ -83,7 +83,7 @@ export function Listing({ listing }: ListingProps) {
                   className="flex justify-between items-center"
                 >
                   <span>{lead.name}</span>
-                  <LeadStatus status={lead.status} />
+                  <LeadStatus lead={lead} />
 
                 </li>
               ))}

@@ -88,6 +88,21 @@ export default function ListingsPage() {
           price: listing.price,
         });
 
+        await fetch("http://localhost:3001/post", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+          body: JSON.stringify({
+            title: listing.title,
+            description: listing.description,
+            price: listing.price,
+            imageUrl: fileUrl,
+          }),
+          mode: "cors",
+        });
+
         setOpen(false);
         setProcessing(false);
         setSelectedFile(null);

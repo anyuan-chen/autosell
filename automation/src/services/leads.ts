@@ -33,13 +33,17 @@ export const upsert = async ({
   if (existingLead) {
     const updated = await prisma.lead.update({
       where: {
-        id: existingLead.id,
+        name_listingId: {
+          name: existingLead.name,
+          listingId: existingLead.listingId,
+        },
       },
       data: {
         status,
+        messageLogs,
       },
     });
-    return updated.id;
+    return `${updated.name}_${updated.listingId}`;
   }
 
   const created = await prisma.lead.create({
@@ -50,5 +54,5 @@ export const upsert = async ({
       messageLogs,
     },
   });
-  return created.id;
+  return `${created.name}_${created.listingId}`;
 };

@@ -267,7 +267,12 @@ export const respondToKijiji = async () => {
     create: {
       listing: {
         connect: {
-          kijijiLink: adLink,
+          id:
+            (
+              await prisma.listing.findFirst({
+                where: { kijijiLink: adLink },
+              })
+            )?.id || 0,
         },
       },
       name: name,

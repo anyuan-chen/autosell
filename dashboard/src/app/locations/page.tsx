@@ -104,7 +104,7 @@ export function SortableLocation({ location }: { location: Location }) {
 }
 
 export default function LocationList() {
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<Location[] | undefined>(undefined);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -181,7 +181,7 @@ export default function LocationList() {
 
   const addLocation = async () => {
     if (newLocation && locations) {
-      console.log(newLocation, locations)
+      console.log(newLocation, locations);
       await replaceAll({
         locations: [...locations, { ...newLocation, rank: locations.length }],
       });
@@ -256,28 +256,40 @@ export default function LocationList() {
                 {newLocation && (
                   <div className="text-sm text-gray-500 space-y-2">
                     <div className="flex items-center">
-                      {newLocation.isPublicPlace ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-500" />
+                      {newLocation.isPublicPlace !== undefined && (
+                        <>
+                          {newLocation.isPublicPlace ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className="ml-2">Public Place</span>
+                        </>
                       )}
-                      <span className="ml-2">Public Place</span>
                     </div>
                     <div className="flex items-center">
-                      {newLocation.hasPeopleAround ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-500" />
+                      {newLocation.hasPeopleAround !== undefined && (
+                        <>
+                          {newLocation.hasPeopleAround ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className="ml-2">People Around</span>
+                        </>
                       )}
-                      <span className="ml-2">People Around</span>
                     </div>
                     <div className="flex items-center">
-                      {newLocation.hasSecurityCameras ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-500" />
+                      {newLocation.hasSecurityCameras !== undefined && (
+                        <>
+                          {newLocation.hasSecurityCameras ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <XCircle className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className="ml-2">Security Cameras</span>
+                        </>
                       )}
-                      <span className="ml-2">Security Cameras</span>
                     </div>
                     <div className="pt-8">{newLocation.reasoning}</div>
                   </div>

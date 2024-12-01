@@ -16,8 +16,6 @@ import { Label } from "@/components/ui/label";
 import { useUpload } from "@/hooks/use-upload";
 import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { useR2Url } from "@/hooks/use-r2-url";
 
 export default function ListingsPage() {

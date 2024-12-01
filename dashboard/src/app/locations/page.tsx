@@ -109,7 +109,6 @@ export function SortableLocation({ location }: { location: Location }) {
 
 export default function LocationList() {
   const [locations, setLocations] = useState<Location[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -122,7 +121,6 @@ export default function LocationList() {
       } catch (error) {
         console.error("Error fetching locations:", error);
       } finally {
-        setIsLoading(false);
       }
     };
     fetchLocations();

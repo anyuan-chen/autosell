@@ -1,7 +1,6 @@
 "use client";
 
 import { Listing } from "./Listing";
-import { useQuery } from "convex/react";
 
 export function ListingsContainer() {
   const listings = useQuery(api.listings.getAll);

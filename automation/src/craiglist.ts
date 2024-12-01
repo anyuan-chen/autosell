@@ -2,7 +2,6 @@ import { Stagehand } from "@browserbasehq/stagehand";
 import * as path from "path";
 import fs from "fs";
 import { CraigsListSaleCategory, CraigsListPostDetails } from "types";
-import { api } from "../convex/_generated/api";
 import { prisma } from "app";
 
 export const runCraigsListLogin = async (stagehand: Stagehand) => {

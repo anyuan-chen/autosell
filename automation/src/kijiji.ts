@@ -12,7 +12,6 @@ import {
 } from "types";
 import { generateObject, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { api } from "../convex/_generated/api";
 
 export type KijijiSubcategory =
   | KijijiClothingCategory

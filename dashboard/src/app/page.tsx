@@ -25,16 +25,17 @@ export default function ListingsPage() {
   const { uploadFile, isUploading, progress } = useUpload();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
-  const [processing, setProcessing] = useState(false);
+  const [processing, setProcessing] = useState(true);
   const { getUrl } = useR2Url();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      handleUpload(e.target.files[0]);
       setSelectedFile(e.target.files[0]);
     }
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (selectedFile: File) => {
     console.log("handling upload");
     if (!selectedFile) {
       console.log("No file selected");
@@ -47,7 +48,7 @@ export default function ListingsPage() {
         setProcessing(true);
         const fileUrl = await getUrl(key);
         if (!fileUrl) {
-          throw "Failed to get file URL";
+          throw new Error("Failed to get file URL");
         }
         console.log("fileUrl", fileUrl);
         const analyzeResponse = await fetch("/api/analyze-image", {
@@ -93,6 +94,7 @@ export default function ListingsPage() {
       }
     } catch (error) {
       console.error("Upload error:", error);
+      setProcessing(false);
     }
   };
 
@@ -110,32 +112,50 @@ export default function ListingsPage() {
             <DialogHeader>
               <DialogTitle>Create New Listing</DialogTitle>
             </DialogHeader>
-            {!isUploading && !processing ? (
+            {!selectedFile ? (
               <>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="file">Upload File</Label>
-                    <Input
-                      id="file"
-                      type="file"
-                      accept=".jpg"
-                      onChange={handleFileChange}
-                      disabled={isUploading}
-                    />
-                    {isUploading && (
-                      <Progress value={progress} className="w-full" />
-                    )}
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="file">Upload File</Label>
+                      <Input
+                        id="file"
+                        type="file"
+                        accept=".jpg"
+                        onChange={handleFileChange}
+                        disabled={isUploading}
+                      />
+                      {isUploading && (
+                        <Progress value={progress} className="w-full" />
+                      )}
+                    </div>
                   </div>
+                  <DialogFooter>
+                    <Button
+                      type="submit"
+                      disabled={!selectedFile || isUploading}
+                    >
+                      {isUploading ? "Uploading..." : "Upload"}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </>
+            ) : processing ? (
+              <>
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="animate-spin text-4xl mb-4">⚙️</div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Processing Your Image...
+                  </h3>
+                  <p className="text-gray-600 text-center">
+                    We&apos;re analyzing your image and generating the listing
+                    details. This may take a moment.
+                  </p>
                 </div>
-                <DialogFooter>
-                  <Button
-                    type="submit"
-                    onClick={handleUpload}
-                    disabled={!selectedFile || isUploading}
-                  >
-                    {isUploading ? "Uploading..." : "Upload"}
-                  </Button>
-                </DialogFooter>
               </>
             ) : (
               <>

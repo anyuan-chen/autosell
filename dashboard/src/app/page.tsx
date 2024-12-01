@@ -97,6 +97,7 @@ export default function ListingsPage() {
           throw new Error(createListingData.error);
         }
         console.log("i got here!");
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const [kijijiRes, shopifyRes, craigslistRes] = await Promise.all([
           fetch("http://localhost:3001/post-kijiji", {
             method: "POST",

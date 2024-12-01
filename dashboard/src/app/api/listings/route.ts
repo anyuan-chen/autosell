@@ -4,10 +4,17 @@ export const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const listingWithLeads = await prisma.listing.findMany({
+    const l = await prisma.listing.findMany({
       include: {
         Lead: true,
       },
+    });
+    const listingWithLeads = l.map((lead) => {
+      return {
+        ...lead,
+        Lead: undefined,
+        leads: lead.Lead,
+      };
     });
     return Response.json({
       success: true,

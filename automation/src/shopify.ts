@@ -73,13 +73,6 @@ const createShopifyProduct = async (
   await fs.promises.writeFile(tempFile, Buffer.from(buffer))
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
-  // const addFromUrlBox = shopifyStagehand.page.locator(
-  //   '[aria-label="Add from URL"]',
-  // );
-  // addFromUrlBox.click();
-
-  // const urlBox = shopifyStagehand.page.locator('[placeholder="https://"]');
-  // await urlBox.fill(image.toString());
   await shopifyStagehand.act({
     action: `click on the "upload new" button`,
   });
@@ -92,14 +85,6 @@ const createShopifyProduct = async (
   await new Promise((resolve) => setTimeout(resolve, 2000))
 
   await fs.promises.unlink(tempFile)
-
-  // await shopifyStagehand.act({
-  //   action: "click on the add file button",
-  // });
-
-  // await shopifyStagehand.act({
-  //   action: "click on the done button",
-  // });
 
   const submitButton = shopifyStagehand.page.locator('[aria-label="Save"]');
   await submitButton.click();

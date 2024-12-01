@@ -4,16 +4,14 @@ import { z } from "zod";
 import fs from "fs";
 import { Stagehand } from "@browserbasehq/stagehand";
 import { Locator } from "playwright-core";
-import { kijijiStagehand, responderStagehand } from "app";
+import { kijijiResponseStagehand, kijijiStagehand } from "app";
 import {
   KijijiCategory,
   KijijiClothingCategory,
   KijijiMusicalInstrumentCategory,
-  KijijiToCategoryMap,
 } from "types";
 import { generateObject, generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { create } from "ts-node";
 
 export type KijijiSubcategory =
   | KijijiClothingCategory
@@ -39,11 +37,11 @@ const generateKijijiInfo = async (src: string) => {
   const response = await generateObject({
     model: openai("gpt-4o"),
     prompt: `Here is some information about a product: ${productInfo.text}. Based on this information, generate a Kijiji listing with the following fields:
-    - title: A clear, descriptive title under 40 characters
-    - description: A detailed product description
-    - price: A reasonable price in CAD
-    - category: One of the following Kijiji categories: ${Object.values(KijijiCategory).join(", ")}
-    - subcategory: If applicable, a relevant subcategory`,
+      - title: A clear, descriptive title under 40 characters
+      - description: A detailed product description
+      - price: A reasonable price in CAD
+      - category: One of the following Kijiji categories: ${Object.values(KijijiCategory).join(", ")}
+      - subcategory: If applicable, a relevant subcategory`,
     schema: z.object({
       category: z.nativeEnum(KijijiCategory),
       subcategory: z.nativeEnum(KijijiMusicalInstrumentCategory).optional(),
@@ -58,11 +56,11 @@ export const runKijijiLogin = async (stagehand: Stagehand) => {
   await stagehand.page.goto(
     "https://id.kijiji.ca/login?service=https%3A%2F%2Fid.kijiji.ca%2Foauth2.0%2FcallbackAuthorize%3Fclient_id%3Dkijiji_horizontal_web_gpmPihV3%26redirect_uri%3Dhttps%253A%252F%252Fwww.kijiji.ca%252Fapi%252Fauth%252Fcallback%252Fcis%26response_type%3Dcode%26client_name%3DCasOAuthClient&locale=en&state=SteMlbjWnFA0Q1E2yVPRw9Pv0KSwaCNECrjy6DGrq20&scope=openid+email+profile",
   );
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  await stagehand.page.fill("#username", "andrew.chen.anyuan@gmail.com");
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await stagehand.page.fill("#username", "p25wang@uwaterloo.ca");
   await stagehand.page.fill("#password", `${process.env.KIJIJI_PASSWORD}`);
   await stagehand.page.click("#login-submit");
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 3000));
 };
 
 export const createKijijiAd = async (
@@ -84,8 +82,6 @@ export const createKijijiAd = async (
   await kijijiStagehand.page.getByText("Next").click();
   await new Promise((resolve) => setTimeout(resolve, 300));
   const buyAndSell = await kijijiStagehand.page.getByText("Buy & Sell");
-
-  const kijijiInfo = await generateKijijiInfo(src);
 
   let buyAndSellButton;
   for (const element of await buyAndSell.all()) {
@@ -136,21 +132,118 @@ export const createKijijiAd = async (
   }
 };
 
-const respondToKijiji = async () => {
-  const url = await responderStagehand.page.url();
-  await new Promise((resolve) => setTimeout(resolve, 4000));
-  console.log(url);
+export const respondToKijiji = async () => {
+  await kijijiResponseStagehand.page.goto(
+    "https://www.kijiji.ca/m-msg-my-messages/conversation/dphl:4j46msr:2m77f78qr",
+  );
+  await new Promise((resolve) => setTimeout(resolve, 10000));
+  const incoming: string[] = [];
+  const outgoing: string[] = [];
+  const allMessages: [string, boolean][] = [];
+
+  console.log("was here");
+
+  // const priceBox = kijijiResponseStagehand.page.locator(
+  //   '[data-testid="AdTitle"]',
+  // );
+  // const priceChildDivs = priceBox.locator("div");
+  // const count = await priceChildDivs.count();
+  // console.log("found the div with count: ", count);
+
+  // const priceGrandchildDiv = priceChildDivs.nth(0);
+  // console.log("found the grandchild div: ", priceGrandchildDiv);
+  // const priceText = await priceGrandchildDiv.textContent();
+  // console.log("found the text");
+
+  // // const listingPrice = parseFloat(priceChildText || "0");
+  // // const minPrice = listingPrice * 0.9;
+
+  // console.log("Price Child: ", priceText);
+  // // console.log("Price: ", listingPrice);
+  // // console.log("minPrice: ", minPrice);
+
+  const messageBox = kijijiResponseStagehand.page.locator(
+    '[data-testid="MessageList"]',
+  );
+
+  const childrenDivs = messageBox.locator("div[data-qa-message-direction]");
+  const messageCount = await childrenDivs.count();
+  console.log("count is: ", messageCount);
+
+  for (let i = 0; i < messageCount; i++) {
+    console.log("was here ", i);
+    const nthChild = childrenDivs.nth(i);
+    const innerDivs = nthChild.locator("div");
+
+    const innerDiv = innerDivs.nth(1);
+    const textContent = await innerDiv.textContent();
+
+    if (!textContent) {
+      continue;
+    }
+
+    const direction = await nthChild.getAttribute("data-qa-message-direction");
+    console.log(
+      `${i}th message is: ${textContent} and the direction is ${direction}`,
+    );
+    if (direction == "INBOUND") {
+      incoming.push(textContent);
+    } else {
+      outgoing.push(textContent);
+    }
+
+    allMessages.push([textContent, direction == "INBOUND" ? true : false]);
+  }
+
+  const NegotiationPrompt = `
+      You are a top negotiator. Make sure the sale is done, at a reasonable price. Come up with the next message in this negotiation. Be very concise and try not to sound like a bot. 
+      After every response, I want you to tell me what stage of the negotiation we are currently in out of the following categories! 
+      export enum NegotiationStage { 
+        Preliminary = "Preliminary", 
+        PriceNegotiation = "Price Negotiation", 
+        Deal = "Deal", 
+        Meetup = "Meetup", 
+      } 
+      Let's say you are selling airpods pro for 30 dollars. Make sure you don't go below 27 dollars. 
+      Here is the conversation up to this point in chronological order, where True means a message the buyer sent, and false means a message that we have already sent.
+      After you guys agree on a price, suggest places to meetup for the sale. 
+      This is the conversation ${allMessages}, please respond to the latest message.
+    `;
+
+  const response = await generateText({
+    model: openai("gpt-4o"),
+    prompt: NegotiationPrompt,
+  });
+
+  if (response.text) {
+    const result = await response.text;
+    console.log(result);
+  } else {
+    console.log("Unexpected response format:", response);
+  }
+
+  console.log("Incoming messages:", incoming);
+  console.log("Outgoing messages:", outgoing);
+  console.log("All messages:", allMessages);
+
+  const messages = response.text.split("\n");
+  await kijijiResponseStagehand.page.fill("#SendMessageForm", messages[0]);
+
+  const sendButton = kijijiResponseStagehand.page.locator(
+    '[data-testid="SendMessage"]',
+  );
+  await sendButton.click();
 };
 
-const messageScanner = async () => {
-  const currentUrl = await responderStagehand.page.url();
+export const MessageScanner = async () => {
+  const currentUrl = await kijijiResponseStagehand.page.url();
   if (currentUrl !== "https://www.kijiji.ca/m-msg-my-messages/") {
-    await responderStagehand.page.goto(
+    await kijijiResponseStagehand.page.goto(
       "https://www.kijiji.ca/m-msg-my-messages/",
     );
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  const listParent = await responderStagehand.page.locator(
+  const listParent = await kijijiResponseStagehand.page.locator(
     `[data-testid="conversation-list"]`,
   );
 
@@ -174,15 +267,15 @@ const messageScanner = async () => {
       await conversation.click({
         modifiers: ["Meta"],
       });
-      await responderStagehand.page.context().waitForEvent("page");
-      const pages = responderStagehand.page.context().pages();
+      await kijijiResponseStagehand.page.context().waitForEvent("page");
+      const pages = kijijiResponseStagehand.page.context().pages();
       const newPage = pages[pages.length - 1];
       await newPage.waitForLoadState();
-      const originalPage = responderStagehand.page;
-      responderStagehand.page = newPage;
+      const originalPage = kijijiResponseStagehand.page;
+      kijijiResponseStagehand.page = newPage;
       await respondToKijiji();
       await newPage.close();
-      responderStagehand.page = originalPage;
+      kijijiResponseStagehand.page = originalPage;
       await new Promise((resolve) => setTimeout(resolve, 500));
       break;
     }
@@ -210,6 +303,6 @@ export const postKijijiAd = async (
 };
 
 export async function responder() {
-  await messageScanner();
-  setTimeout(responder, 10000);
+  await respondToKijiji();
+  setTimeout(responder, 1000);
 }

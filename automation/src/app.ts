@@ -4,18 +4,18 @@ import cors from "cors";
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
+
 import { postKijijiAd, runKijijiLogin } from "kijiji.js";
 import { postShopifyAd, runShopifyLogin } from "shopify.js";
 import { postCraigsListAd, runCraigsListLogin } from "craiglist.js";
 import { z } from "zod";
 import { CraigsListSaleCategory } from "types.js";
 import { openai } from "@ai-sdk/openai";
-import { generateObject, generateText } from "ai";
-
+import { generateObject } from "ai";
 
 dotenv.config({ path: ".env.local" });
 
-export const responderStagehand = new Stagehand({
+export const kijijiResponseStagehand = new Stagehand({
   env: "LOCAL",
 });
 export const kijijiStagehand = new Stagehand({
@@ -42,22 +42,16 @@ app.use(
 
 app.use(express.json());
 
-
 const postToKijiji = async (src: string) => {
-  console.log("before listing")
+  console.log("before listing");
   const listing = await client.query(api.listings.get, { src: src });
-  console.log("listing", listing)
+  console.log("listing", listing);
   if (!listing) {
     throw new Error("Listing not found");
   }
 
   try {
-    await postKijijiAd(
-      src,
-      listing.title,
-      listing.description, 
-      listing.price,
-    );
+    await postKijijiAd(src, listing.title, listing.description, listing.price);
   } catch (error) {
     console.error("Error posting Kijiji ad:", error);
     throw new Error("Failed to post Kijiji ad\n" + error);
@@ -67,7 +61,7 @@ const postToKijiji = async (src: string) => {
   let url = await kijijiStagehand.page.url();
   console.log("Final URL:", url);
 
-  return url?.indexOf("posted") === -1 
+  return url?.indexOf("posted") === -1
     ? url
     : url.substring(0, url.indexOf("posted"));
 };
@@ -79,12 +73,7 @@ const postToShopify = async (src: string) => {
   }
 
   try {
-    await postShopifyAd(
-      src,
-      listing.title,
-      listing.description,
-      listing.price,
-    );
+    await postShopifyAd(src, listing.title, listing.description, listing.price);
   } catch (error) {
     console.error("Error posting Shopify ad:", error);
     throw new Error("Failed to post Shopify ad\n" + error);
@@ -132,15 +121,15 @@ const postToCraigslist = async (src: string) => {
 // @ts-ignore
 app.post("/post-kijiji", async (req: Request, res: Response) => {
   const { src } = req.body;
-  console.log(src)
+  console.log(src);
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
 
   try {
-    console.log("here")
+    console.log("here");
     const url = await postToKijiji(src);
-    console.log("there")
+    console.log("there");
     res.send({ url });
   } catch (error) {
     res.status(500).json({ error: error });
@@ -183,18 +172,18 @@ app.post("/post", async (req: Request, res: Response) => {
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
-  console.log("what is going on")
+  console.log("what is going on");
   try {
     const [kijijiUrl, shopifyUrl, craigslistUrl] = await Promise.all([
       postToKijiji(src),
       postToShopify(src),
-      postToCraigslist(src)
+      postToCraigslist(src),
     ]);
 
     res.send({
       kijijiUrl,
       shopifyUrl,
-      craigslistUrl
+      craigslistUrl,
     });
   } catch (error) {
     res.status(500).json({ error: JSON.stringify(error) });
@@ -203,7 +192,7 @@ app.post("/post", async (req: Request, res: Response) => {
 
 app.listen(port, async () => {
   runShopifyLogin();
-  runCraigsListLogin(craigslistStagehand)
-  runKijijiLogin(kijijiStagehand)
+  runCraigsListLogin(craigslistStagehand);
+  runKijijiLogin(kijijiStagehand);
   console.log(`Server listening on port ${port}`);
 });

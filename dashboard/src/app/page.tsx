@@ -25,6 +25,7 @@ export default function ListingsPage() {
   const { uploadFile, isUploading, progress } = useUpload();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [open, setOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const { getUrl } = useR2Url();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,11 +44,12 @@ export default function ListingsPage() {
     try {
       const key = await uploadFile(selectedFile);
       if (key) {
+        setProcessing(true);
         const fileUrl = await getUrl(key);
         if (!fileUrl) {
           throw "Failed to get file URL";
         }
-
+        console.log("fileUrl", fileUrl);
         const analyzeResponse = await fetch("/api/analyze-image", {
           method: "POST",
           headers: {
@@ -79,13 +81,14 @@ export default function ListingsPage() {
         const listing = generateData.listing;
 
         await createListing({
-          src: key,
+          src: fileUrl,
           title: listing.title,
           description: listing.description,
           price: listing.price,
         });
 
         setOpen(false);
+        setProcessing(false);
         setSelectedFile(null);
       }
     } catch (error) {
@@ -107,7 +110,7 @@ export default function ListingsPage() {
             <DialogHeader>
               <DialogTitle>Create New Listing</DialogTitle>
             </DialogHeader>
-            {!isUploading ? (
+            {!isUploading && !processing ? (
               <>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
@@ -115,6 +118,7 @@ export default function ListingsPage() {
                     <Input
                       id="file"
                       type="file"
+                      accept=".jpg"
                       onChange={handleFileChange}
                       disabled={isUploading}
                     />

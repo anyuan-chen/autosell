@@ -4,15 +4,14 @@ import cors from "cors";
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api.js";
-import {
-  MessageScanner,
-  postKijijiAd,
-  responder,
-  respondToKijiji,
-  runKijijiLogin,
-} from "kijiji.js";
-import { postShopifyAd } from "shopify.js";
-import { postCraigsListAd } from "craiglist.js";
+
+import { postKijijiAd, runKijijiLogin } from "kijiji.js";
+import { postShopifyAd, runShopifyLogin } from "shopify.js";
+import { postCraigsListAd, runCraigsListLogin } from "craiglist.js";
+import { z } from "zod";
+import { CraigsListSaleCategory } from "types.js";
+import { openai } from "@ai-sdk/openai";
+import { generateObject, generateText } from "ai";
 
 dotenv.config({ path: ".env.local" });
 
@@ -29,7 +28,7 @@ export const shopifyStagehand = new Stagehand({
   env: "LOCAL",
 });
 
-const client = new ConvexHttpClient(process.env.CONVEX_URL || "");
+export const client = new ConvexHttpClient(process.env.CONVEX_URL || "");
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -44,7 +43,9 @@ app.use(
 app.use(express.json());
 
 const postToKijiji = async (src: string) => {
-  const listing = await client.query(api.listings.get, { src });
+  console.log("before listing")
+  const listing = await client.query(api.listings.get, { src: src });
+  console.log("listing", listing)
   if (!listing) {
     throw new Error("Listing not found");
   }
@@ -92,11 +93,18 @@ const postToCraigslist = async (src: string) => {
   }
 
   try {
+    const craigslistInfo = await generateObject({
+      model: openai("gpt-4o"),
+      prompt: `Here is some information about a product: ${listing.title} - ${listing.description}. Based on this information, generate a Craigslist listing with the following fields:
+      - category: The appropriate Craigslist sale category`,
+      schema: z.object({
+        category: z.nativeEnum(CraigsListSaleCategory),
+      }),
+    });
     await postCraigsListAd(
       src,
-      listing.title,
-      listing.description,
-      listing.price,
+      craigslistStagehand,
+      craigslistInfo.object.category,
     );
   } catch (error) {
     console.error("Error posting Craigslist ad:", error);
@@ -112,13 +120,16 @@ const postToCraigslist = async (src: string) => {
 
 // @ts-ignore
 app.post("/post-kijiji", async (req: Request, res: Response) => {
-  const { src } = req.query;
+  const { src } = req.body;
+  console.log(src)
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
 
   try {
+    console.log("here")
     const url = await postToKijiji(src);
+    console.log("there")
     res.send({ url });
   } catch (error) {
     res.status(500).json({ error: error });
@@ -127,7 +138,7 @@ app.post("/post-kijiji", async (req: Request, res: Response) => {
 
 // @ts-ignore
 app.post("/post-shopify", async (req: Request, res: Response) => {
-  const { src } = req.query;
+  const { src } = req.body;
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
@@ -142,7 +153,7 @@ app.post("/post-shopify", async (req: Request, res: Response) => {
 
 // @ts-ignore
 app.post("/post-craigslist", async (req: Request, res: Response) => {
-  const { src } = req.query;
+  const { src } = req.body;
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
@@ -157,11 +168,11 @@ app.post("/post-craigslist", async (req: Request, res: Response) => {
 
 // @ts-ignore
 app.post("/post", async (req: Request, res: Response) => {
-  const { src } = req.query;
+  const { src } = req.body;
   if (!src || typeof src !== "string") {
     return res.status(400).json({ error: "Missing or invalid src parameter" });
   }
-
+  console.log("what is going on")
   try {
     const [kijijiUrl, shopifyUrl, craigslistUrl] = await Promise.all([
       postToKijiji(src),
@@ -175,11 +186,13 @@ app.post("/post", async (req: Request, res: Response) => {
       craigslistUrl,
     });
   } catch (error) {
-    res.status(500).json({ error: error });
+    res.status(500).json({ error: JSON.stringify(error) });
   }
 });
 
 app.listen(port, async () => {
-  await MessageScanner();
+  runShopifyLogin();
+  runCraigsListLogin(craigslistStagehand)
+  runKijijiLogin(kijijiStagehand)
   console.log(`Server listening on port ${port}`);
 });

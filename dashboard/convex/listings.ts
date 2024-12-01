@@ -34,6 +34,7 @@ export const create = mutation({
     const listingId = await ctx.db.insert("listings", {
       title: args.title,
       price: args.price,
+      description: args.description,
       kijijiLink: args.kijijiLink,
       craigslistLink: args.craigslistLink,
       shopifyLink: args.shopifyLink,

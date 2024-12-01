@@ -43,7 +43,6 @@ app.use(
 app.use(express.json());
 
 const postToKijiji = async (src: string) => {
-  console.log("before listing");
   const listing = await client.query(api.listings.get, { src: src });
   console.log("listing", listing);
   if (!listing) {
@@ -67,7 +66,12 @@ const postToKijiji = async (src: string) => {
 };
 
 const postToShopify = async (src: string) => {
+  console.log("before listing", src);
+
   const listing = await client.query(api.listings.get, { src });
+
+  console.log("listing: ", listing)
+  
   if (!listing) {
     throw new Error("Listing not found");
   }
@@ -158,6 +162,7 @@ app.post("/post-shopify", async (req: Request, res: Response) => {
     const url = await postToShopify(src);
     res.send({ url });
   } catch (error) {
+    console.log("error: ", error);
     res.status(500).json({ error: error });
   }
 });

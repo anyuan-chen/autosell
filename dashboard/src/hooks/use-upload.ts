@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 export function useUpload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -9,38 +9,39 @@ export function useUpload() {
       setIsUploading(true);
       setProgress(0);
 
-      const response = await fetch('/api/upload-url', {
-        method: 'POST',
+      const response = await fetch("/api/upload-url", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type,
+          expiresIn: 86400, // 24 hours in seconds
         }),
       });
 
       const { success, url, key } = await response.json();
 
       if (!success || !url) {
-        throw new Error('Failed to get signed URL');
+        throw new Error("Failed to get signed URL");
       }
 
       const upload = await fetch(url, {
-        method: 'PUT',
+        method: "PUT",
         body: file,
         headers: {
-          'Content-Type': file.type,
+          "Content-Type": file.type,
         },
       });
 
       if (!upload.ok) {
-        throw new Error('Failed to upload file');
+        throw new Error("Failed to upload file");
       }
 
       return key;
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
       return null;
     } finally {
       setIsUploading(false);
@@ -53,4 +54,4 @@ export function useUpload() {
     isUploading,
     progress,
   };
-} 
+}

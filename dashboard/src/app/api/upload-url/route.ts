@@ -13,7 +13,7 @@ const R2 = new S3Client({
 
 export async function POST(request: Request) {
   try {
-    const { filename, contentType } = await request.json();
+    const { filename, contentType, expiresIn } = await request.json();
 
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       ContentType: contentType,
     });
 
-    const signedUrl = await getSignedUrl(R2, command, { expiresIn: 3600 });
+    const signedUrl = await getSignedUrl(R2, command, { expiresIn });
 
     return Response.json({
       success: true,

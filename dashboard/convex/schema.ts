@@ -30,9 +30,10 @@ export default defineSchema({
     listingId: v.id("listings"),
     name: v.string(),
     status: v.union(
-      v.literal("inquiry"),
-      v.literal("negotiation"),
-      v.literal("closing")
+      v.literal("Preliminary"),
+      v.literal("Price Negotiation"),
+      v.literal("Deal"),
+      v.literal("Meetup")
     ),
   }),
 });

@@ -81,6 +81,10 @@ const postToShopify = async (src: string) => {
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
   let url = await shopifyStagehand.page.url();
+  await client.mutation(api.listings.upsert, {
+    src: src,
+    shopifyLink: url,
+  });
   console.log("Final URL:", url);
 
   return url;
@@ -114,7 +118,10 @@ const postToCraigslist = async (src: string) => {
   await new Promise((resolve) => setTimeout(resolve, 2000));
   let url = await craigslistStagehand.page.url();
   console.log("Final URL:", url);
-
+  await client.mutation(api.listings.upsert, {
+    src: src,
+    craigslistLink: url,
+  });
   return url;
 };
 
@@ -129,6 +136,10 @@ app.post("/post-kijiji", async (req: Request, res: Response) => {
   try {
     console.log("here");
     const url = await postToKijiji(src);
+    await client.mutation(api.listings.upsert, {
+      src: src,
+      kijijiLink: url,
+    });
     console.log("there");
     res.send({ url });
   } catch (error) {

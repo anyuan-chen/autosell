@@ -1,9 +1,3 @@
-export enum ecommercePlatform {
-  Shopify = "Shopify",
-  Kijiji = "Kijiji",
-  Craigslist = "Craigslist",
-}
-
 export enum KijijiCategory {
   ArtsAndCollectibles = "Arts & Collectibles",
   Audio = "Audio",
@@ -66,76 +60,6 @@ export enum KijijiClothingCategory {
   WomensOther = "Women's - Other",
 }
 
-export const KijijiToCategoryMap: Record<
-  string,
-  | typeof KijijiClothingCategory
-  | typeof KijijiMusicalInstrumentCategory
-  | undefined
-> = {
-  [KijijiCategory.Clothing]: KijijiClothingCategory,
-  [KijijiCategory.MusicalInstruments]: KijijiMusicalInstrumentCategory,
-  [KijijiCategory.ArtsAndCollectibles]: undefined,
-  [KijijiCategory.Audio]: undefined,
-  [KijijiCategory.BabyItems]: undefined,
-  [KijijiCategory.Bikes]: undefined,
-  [KijijiCategory.Books]: undefined,
-  [KijijiCategory.BusinessAndIndustrial]: undefined,
-  [KijijiCategory.CamerasAndCamcorders]: undefined,
-  [KijijiCategory.CDsDVDsAndBluray]: undefined,
-  [KijijiCategory.Computers]: undefined,
-  [KijijiCategory.ComputerAccessories]: undefined,
-  [KijijiCategory.Electronics]: undefined,
-  [KijijiCategory.FreeStuff]: undefined,
-  [KijijiCategory.Furniture]: undefined,
-  [KijijiCategory.GarageSales]: undefined,
-  [KijijiCategory.HealthAndSpecialNeeds]: undefined,
-  [KijijiCategory.HobbiesAndCrafts]: undefined,
-  [KijijiCategory.HomeAppliances]: undefined,
-  [KijijiCategory.HomeIndoor]: undefined,
-  [KijijiCategory.HomeOutdoorAndGarden]: undefined,
-  [KijijiCategory.HomeRenovationMaterials]: undefined,
-  [KijijiCategory.JewelleryAndWatches]: undefined,
-  [KijijiCategory.Phones]: undefined,
-  [KijijiCategory.SportingGoodsAndExercise]: undefined,
-  [KijijiCategory.Tools]: undefined,
-  [KijijiCategory.ToysAndGames]: undefined,
-  [KijijiCategory.TVsAndVideo]: undefined,
-  [KijijiCategory.VideoGamesAndConsoles]: undefined,
-};
-
-export enum ShopifyCategory {
-  ApparelAndAccessories = "Electronics",
-  ArtsAndEntertainment = "Arts & Entertainment",
-  Electornics = "Electronics",
-}
-
-export enum ShopifyClothingCategory {
-  Clothing = "Clothing",
-  ClothingAccessories = "Clothing Accessories",
-  CostumeAndAccessories = "Costume & Accessories",
-  HandbagAndWalletAccessories = "Handbag & Wallet Accessories",
-}
-
-export enum ShopifyElectronicsCategory {
-  ArcadeEquipment = "Arcade Equipment",
-  GPSTrackingDevice = "GPS Tracking Device",
-  MarineElectronics = "Marine Electronics",
-  Networking = "Networking",
-  PrintCopyScanFax = "Print Copy Scan & Fax",
-  RadarDetector = "Radar Detector",
-  SpeedRadar = "Speed Radar",
-  TollCollectionDevice = "Toll Collection Device",
-  Video = "Video",
-  VideoGameConsoleAccessories = "Video Game Console Accessories",
-  VideoGameConsoles = "Video Game Consoles",
-  Audio = "Audio",
-  CircuitBoardsComponents = "Circuit Boards & Components",
-  Communications = "Communications",
-  Components = "Components",
-  Computers = "Computers",
-}
-
-export enum ShopifyMusicalInstrumentCategory {}
 export enum CraigsListSaleCategory {
   Antiques = "Antiques",
   Appliances = "Appliances",

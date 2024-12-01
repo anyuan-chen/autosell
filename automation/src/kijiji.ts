@@ -139,12 +139,20 @@ export const respondToKijiji = async () => {
     .getAttribute("href");
 
   if (!adLink) {
-    throw new Error("no adLink found on the page");
+    throw new Error("no link to the kijiji ad found on the page ff15");
   }
 
+  // Extract adId from the URL
+  const adIdMatch = adLink.match(/adId=(\d+)/);
+  if (!adIdMatch) {
+    throw new Error("Could not extract adId from URL");
+  }
+  const adId = adIdMatch[1];
   const listing = await prisma.listing.findFirst({
     where: {
-      kijijiLink: adLink,
+      kijijiLink: {
+        contains: adId,
+      },
     },
   });
 
